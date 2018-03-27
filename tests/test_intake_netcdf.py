@@ -7,19 +7,9 @@ import pandas as pd
 import time
 import xarray as xr
 
+from .util import source, dataset, TEST_URLPATH
+
 from intake_netcdf import NetCDFPlugin, NetCDFSource 
-
-TEST_DATA_DIR = 'tests/data'
-TEST_DATA = 'example_1.nc'
-TEST_URLPATH = os.path.join(TEST_DATA_DIR, TEST_DATA)
-
-@pytest.fixture
-def source():
-    return NetCDFSource(TEST_URLPATH)
-
-@pytest.fixture
-def dataset():
-    return xr.open_dataset(TEST_URLPATH)
 
 def test_discover(source, dataset):
     r = source.discover()
