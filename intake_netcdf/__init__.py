@@ -12,18 +12,22 @@ class NetCDFPlugin(base.Plugin):
                                            container='python',
                                            partition_access=True)
 
-    def open(self, urlpath, **kwargs):
+    def open(self, urlpath, chunks, **kwargs):
         """
         Create NetCDFSource instance
 
         Parameters
         ----------
-        table, connection, qargs, partitions
-            See ``NetCDFSource``.
+        urlpath: str
+            Path to source file.
+        chunks: int or dict
+            Chunks is used to load the new dataset into dask
+            arrays. ``chunks={}`` loads the dataset with dask using a single
+            chunk for all arrays.
         """
         base_kwargs, source_kwargs = self.separate_base_kwargs(kwargs)
-        qargs = source_kwargs.pop('qargs', {})
         return NetCDFSource(urlpath=urlpath,
+                            chunks=chunks,
                             xarray_kwargs = source_kwargs,
                             metadata=base_kwargs['metadata'])
 
@@ -33,18 +37,21 @@ class NetCDFSource(base.DataSource):
 
     Parameters
     ----------
-    param: type
-        description
+    urlpath: str
+        Path to source file.
+    chunks: int or dict
+        Chunks is used to load the new dataset into dask
+        arrays. ``chunks={}`` loads the dataset with dask using a single
+        chunk for all arrays.
     """
-    container = 'python'
 
-    def __init__(self, urlpath, xarray_kwargs=None, metadata=None):
+    def __init__(self, urlpath, chunks, xarray_kwargs=None, metadata=None):
         self.urlpath = urlpath
+        self.chunks = chunks
         self._kwargs = xarray_kwargs or {}
-        self.chunks = self._kwargs.get('chunks') 
         self._ds = None
         super(NetCDFSource, self).__init__(
-            container=self.container,
+            container=None,
             metadata=metadata)
 
     def _open_dataset(self):
@@ -70,17 +77,17 @@ class NetCDFSource(base.DataSource):
 
     def read(self):
         self._load_metadata()
-        return self._ds
+        return self._ds.load()
 
     def read_chunked(self):
-        raise Exception('read_chunked not supported for xarray containers.')
+        self._load_metadata()
+        return self._ds
 
     def read_partition(self, i):
         raise Exception('read_partition not supported for xarray containers.')
 
     def to_dask(self):
-        self._load_metadata()
-        return self._ds.to_dask_dataframe()
+        return self.read_chunked()
 
     def close(self):
         self._ds.close()

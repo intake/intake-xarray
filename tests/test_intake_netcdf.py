@@ -1,5 +1,4 @@
 
-from dask.dataframe.core import DataFrame
 import numpy as np
 import os
 import pytest
@@ -31,12 +30,15 @@ def test_read(source, dataset):
     assert np.all(ds.rh == dataset.rh)
 
 def test_read_chunked():
-    source = NetCDFSource(TEST_URLPATH, xarray_kwargs={'chunks': {'lon': 2}})
-    ds = source.read()
+    source = NetCDFSource(TEST_URLPATH, chunks={'lon': 2})
+    ds = source.read_chunked()
     dataset = xr.open_dataset(TEST_URLPATH, chunks={'lon': 2})
 
     assert ds.temp.chunks == dataset.temp.chunks
 
 def test_to_dask(source, dataset):
-    df = source.to_dask()
-    assert type(df) == DataFrame
+    ds = source.to_dask()
+
+    assert ds.dims == dataset.dims
+    assert np.all(ds.temp == dataset.temp)
+    assert np.all(ds.rh == dataset.rh)

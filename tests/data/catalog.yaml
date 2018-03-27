@@ -7,3 +7,4 @@ sources:
     driver: netcdf
     args: 
       urlpath: !template '{{ CATALOG_DIR }}/example_1.nc'
+      chunks: {}
