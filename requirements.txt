@@ -1,0 +1,7 @@
+intake
+dask
+requests
+pandas
+scipy
+xarray
+pytest
