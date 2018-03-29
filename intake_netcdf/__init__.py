@@ -84,7 +84,7 @@ class NetCDFSource(base.DataSource):
         return self._ds
 
     def read_partition(self, i):
-        raise Exception('read_partition not supported for xarray containers.')
+        raise NotImplementedError
 
     def to_dask(self):
         return self.read_chunked()

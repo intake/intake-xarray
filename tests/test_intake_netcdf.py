@@ -36,6 +36,10 @@ def test_read_chunked():
 
     assert ds.temp.chunks == dataset.temp.chunks
 
+def test_read_partition(source):
+    with pytest.raises(NotImplementedError):
+        ds = source.read_partition(None)
+
 def test_to_dask(source, dataset):
     ds = source.to_dask()
 
