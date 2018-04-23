@@ -1,0 +1,28 @@
+language: generic
+sudo: required
+os:
+  - linux
+env:
+  matrix:
+  - CONDA_PY=35
+  global:
+    secure: OqHGuTssGxl/GeL+3NmZaFpgeqADlQgG+AdfxNY33tgcaGK/CGBeJRAxaM9IAxXgW8HQybsuZNRf3mtvXZPMjuN5noOl5TYSUf1pmODg46BurMQx1FzIN+f+qBCWAsnm96q1+/RCXDwPf/nXkFpdYDtlPgaXwFdisJ5bT4yv+DVszX6qd3CceKwcCD+StmWB08p4lwcqbAU8itEovQJmaaxzoWup8bzbGprzRGenGGtiLG9MbJ1azBp8qF10xnHRXJgt/8H3mPrT8V7o8P877AVcT1uubqLA7rjak43obcVv8Z8UCZZGdTM5PH05dQO02hKL1GzoI0qA+6K4xWSGTnwcnJnKVFzPlNmlJDG3rG5mROvWH06nGEMy4r0/6bevwz3xYE9LdB2JBDpMX+nIS26ysIpslmnzXsSYxjbE9aY3PfQpJMwM5JFXYXWMZNXGJrN5Bb2+6pFLuUcSterka9Ub5ccRRhOXacXHzZx3OOdSJbJ/IF1wlO7DfjN2JouVLqKm8KkysJmQ9GhY8fcKcuzdi8AGycjSEzVo7wrSRkNZNhitYULs/i7Tco0qppZR6mgqJgNzUPspuEylMZ1aDbT9iijR6lh1t78HvezldQLIJbd8tEyvvMFvz8mnZzQtpUXeHPqQknkmb2z381dJPJYlcuP+tbUK/HDwP2Ghzmc=
+install:
+- |
+  echo "Installing a fresh version of Miniconda."
+  MINICONDA_URL="https://repo.continuum.io/miniconda"
+  MINICONDA_FILE="Miniconda3-latest-$(case $TRAVIS_OS_NAME in (linux) echo Linux;; (osx) echo MacOSX;;esac)-x86_64.sh"
+  curl -L -O "${MINICONDA_URL}/${MINICONDA_FILE}"
+  bash $MINICONDA_FILE -b
+- |
+  echo "Configuring conda."
+  source $HOME/miniconda3/bin/activate root
+  conda install -y conda-build anaconda-client
+script:
+- conda build -c intake -c defaults -c conda-forge ./conda
+- if [[ -n "${TRAVIS_TAG}" ]]; then anaconda -t ${ANACONDA_TOKEN} upload `conda build
+  -c intake/label/main --output ./conda`; fi
+notifications:
+  email: false
+  on_success: change
+  on_failure: always

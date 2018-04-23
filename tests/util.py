@@ -11,7 +11,7 @@ TEST_URLPATH = os.path.join(TEST_DATA_DIR, TEST_DATA)
 
 @pytest.fixture
 def source():
-    return NetCDFSource(TEST_URLPATH)
+    return NetCDFSource(TEST_URLPATH, {})
 
 @pytest.fixture
 def dataset():
