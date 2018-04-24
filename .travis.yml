@@ -17,7 +17,9 @@ install:
 - |
   echo "Configuring conda."
   source $HOME/miniconda3/bin/activate root
+  conda config --add channels conda-forge
   conda install -y conda-build anaconda-client
+  conda install -y ciocheck
 script:
 - conda build -c intake -c defaults -c conda-forge ./conda
 - if [[ -n "${TRAVIS_TAG}" ]]; then anaconda -t ${ANACONDA_TOKEN} upload `conda build
