@@ -1,0 +1,113 @@
+# -----------------------------------------------------------------------------
+# ciocheck
+# https://github.com/ContinuumIO/ciocheck
+# -----------------------------------------------------------------------------
+[ciocheck]
+branch = origin/master
+diff_mode = commited
+file_mode = all
+check = pyformat,yapf,flake8,pytest,coverage
+enforce = pyformat,yapf,flake8,pytest,coverage
+
+# Python (pyformat)
+add_copyright = true
+add_header = true
+add_init = true
+
+# -----------------------------------------------------------------------------
+# pep8
+# http://pep8.readthedocs.io/en/latest/intro.html#configuration
+# -----------------------------------------------------------------------------
+[pep8]
+max-line-length = 99
+
+# -----------------------------------------------------------------------------
+# pydocstyle
+# http://www.pydocstyle.org/en/latest/usage.html#example
+# -----------------------------------------------------------------------------
+[pydocstyle]
+add-ignore = D203
+inherit = false
+
+# -----------------------------------------------------------------------------
+# Flake 8
+# http://flake8.readthedocs.io/en/latest/config.html
+# -----------------------------------------------------------------------------
+[flake8]
+# D10x = missing docstrings, E266 = leading hash in block comment created by alembic
+ignore = D100,D101,D102,D103,D104,D105,E266
+max-line-length = 99
+max-complexity = 64
+
+# -----------------------------------------------------------------------------
+# pylint
+# https://pylint.readthedocs.io/en/latest/
+# -----------------------------------------------------------------------------
+#[pylint:messages]
+
+# -----------------------------------------------------------------------------
+# isort
+# https://github.com/timothycrosley/isort/wiki/isort-Settings
+# -----------------------------------------------------------------------------
+[isort]
+from_first = true
+import_heading_stdlib = Standard library imports
+import_heading_firstparty = Local imports
+import_heading_thirdparty = Third party imports
+indent = '    '
+known_first_party = anaconda_navigator
+known_third_party = six,_license,pytestqt
+line_length = 99
+sections = FUTURE,STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER
+
+# -----------------------------------------------------------------------------
+# yapf
+# https://github.com/google/yapf#formatting-style
+# -----------------------------------------------------------------------------
+[yapf:style]
+based_on_style = pep8
+column_limit = 99
+spaces_before_comment = 2
+
+# -----------------------------------------------------------------------------
+# autopep8
+# http://pep8.readthedocs.io/en/latest/intro.html#configuration
+# -----------------------------------------------------------------------------
+[autopep8]
+exclude = */tests/*
+ignore = E126,
+max-line-length = 99
+
+# -----------------------------------------------------------------------------
+# Coverage
+# http://coverage.readthedocs.io/en/latest/config.html
+# -----------------------------------------------------------------------------
+[coverage:run]
+omit =
+    */tests/*
+    */integration_tests/*
+    */build/*
+    */envs/*
+    */node_modules/*
+    /apb.py
+
+[coverage:report]
+show_missing = true
+skip_covered = true
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+    # Ignore local file testing
+    def test():
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+
+# -----------------------------------------------------------------------------
+# pytest
+# http://doc.pytest.org/en/latest/usage.html
+# -----------------------------------------------------------------------------
+[pytest]
+addopts = -rfew --durations=10
+python_functions = test_*
+# overridden in specific config files
+testpaths=NOT_A_PATH

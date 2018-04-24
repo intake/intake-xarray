@@ -27,8 +27,9 @@ test:
     - pytest
     - pytest-cov
     - coverage
+    - ciocheck
   commands:
-    - py.test --verbose --cov=intake_xarray tests
+    - py.test --verbose
 
 about:
   home: https://github.com/ContinuumIO/intake-xarray

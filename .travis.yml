@@ -22,6 +22,7 @@ script:
 - conda build -c intake -c defaults -c conda-forge ./conda
 - if [[ -n "${TRAVIS_TAG}" ]]; then anaconda -t ${ANACONDA_TOKEN} upload `conda build
   -c intake/label/main --output ./conda`; fi
+- ciocheck --config=.ciocheck intake_xarray
 notifications:
   email: false
   on_success: change

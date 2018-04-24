@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright 2016 Continuum Analytics, Inc.
+#
+# May be copied and distributed freely only as part of an Anaconda or
+# Miniconda installation.
+# -----------------------------------------------------------------------------
 from intake.source import base
 import xarray as xr
 __version__ = '0.0.1'
@@ -7,10 +14,8 @@ class XarrayPlugin(base.Plugin):
     """Plugin for xarray reader"""
 
     def __init__(self):
-        super(XarrayPlugin, self).__init__(name='xarray',
-                                           version=__version__,
-                                           container='python',
-                                           partition_access=True)
+        super(XarrayPlugin, self).__init__(
+            name='xarray', version=__version__, container='python', partition_access=True)
 
     def open(self, urlpath, chunks, **kwargs):
         """
@@ -26,10 +31,11 @@ class XarrayPlugin(base.Plugin):
             chunk for all arrays.
         """
         base_kwargs, source_kwargs = self.separate_base_kwargs(kwargs)
-        return XarraySource(urlpath=urlpath,
-                            chunks=chunks,
-                            xarray_kwargs = source_kwargs,
-                            metadata=base_kwargs['metadata'])
+        return XarraySource(
+            urlpath=urlpath,
+            chunks=chunks,
+            xarray_kwargs=source_kwargs,
+            metadata=base_kwargs['metadata'])
 
 
 class XarraySource(base.DataSource):
@@ -50,9 +56,7 @@ class XarraySource(base.DataSource):
         self.chunks = chunks
         self._kwargs = xarray_kwargs or {}
         self._ds = None
-        super(XarraySource, self).__init__(
-            container=None,
-            metadata=metadata)
+        super(XarraySource, self).__init__(container=None, metadata=metadata)
 
     def _open_dataset(self):
         return xr.open_dataset(self.urlpath, chunks=self.chunks)
@@ -62,18 +66,17 @@ class XarraySource(base.DataSource):
             self._ds = self._open_dataset()
 
         metadata = {
-                'dims' : dict(self._ds.dims),
-                'data_vars': tuple(self._ds.data_vars.keys()),
-                'coords': tuple(self._ds.coords.keys())
-            }
+            'dims': dict(self._ds.dims),
+            'data_vars': tuple(self._ds.data_vars.keys()),
+            'coords': tuple(self._ds.coords.keys())
+        }
         metadata.update(self._ds.attrs)
         return base.Schema(
             datashape=None,
             dtype=xr.Dataset,
             shape=None,
             npartitions=None,
-            extra_metadata=metadata
-        )
+            extra_metadata=metadata)
 
     def read(self):
         self._load_metadata()
