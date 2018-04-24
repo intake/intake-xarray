@@ -3,18 +3,18 @@ import xarray as xr
 __version__ = '0.0.1'
 
 
-class NetCDFPlugin(base.Plugin):
-    """Plugin for NetCDF reader"""
+class XarrayPlugin(base.Plugin):
+    """Plugin for xarray reader"""
 
     def __init__(self):
-        super(NetCDFPlugin, self).__init__(name='netcdf',
+        super(XarrayPlugin, self).__init__(name='xarray',
                                            version=__version__,
                                            container='python',
                                            partition_access=True)
 
     def open(self, urlpath, chunks, **kwargs):
         """
-        Create NetCDFSource instance
+        Create XarraySource instance
 
         Parameters
         ----------
@@ -26,14 +26,14 @@ class NetCDFPlugin(base.Plugin):
             chunk for all arrays.
         """
         base_kwargs, source_kwargs = self.separate_base_kwargs(kwargs)
-        return NetCDFSource(urlpath=urlpath,
+        return XarraySource(urlpath=urlpath,
                             chunks=chunks,
                             xarray_kwargs = source_kwargs,
                             metadata=base_kwargs['metadata'])
 
 
-class NetCDFSource(base.DataSource):
-    """Open a NetCDF file with xarray.
+class XarraySource(base.DataSource):
+    """Open a xarray file.
 
     Parameters
     ----------
@@ -50,7 +50,7 @@ class NetCDFSource(base.DataSource):
         self.chunks = chunks
         self._kwargs = xarray_kwargs or {}
         self._ds = None
-        super(NetCDFSource, self).__init__(
+        super(XarraySource, self).__init__(
             container=None,
             metadata=metadata)
 

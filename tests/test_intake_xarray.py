@@ -8,7 +8,7 @@ import xarray as xr
 
 from .util import source, dataset, TEST_URLPATH
 
-from intake_netcdf import NetCDFPlugin, NetCDFSource 
+from intake_xarray import XarrayPlugin, XarraySource 
 
 def test_discover(source, dataset):
     r = source.discover()
@@ -30,7 +30,7 @@ def test_read(source, dataset):
     assert np.all(ds.rh == dataset.rh)
 
 def test_read_chunked():
-    source = NetCDFSource(TEST_URLPATH, chunks={'lon': 2})
+    source = XarraySource(TEST_URLPATH, chunks={'lon': 2})
     ds = source.read_chunked()
     dataset = xr.open_dataset(TEST_URLPATH, chunks={'lon': 2})
 

@@ -1,5 +1,5 @@
 package:
-   name: intake-netcdf
+   name: intake-xarray
    version: 0.0.1
 
 source:
@@ -17,6 +17,7 @@ requirements:
   run:
     - intake
     - python
+    - scipy
     - xarray
 
 test:
@@ -27,11 +28,11 @@ test:
     - pytest-cov
     - coverage
   commands:
-    - py.test --verbose --cov=intake_netcdf tests
+    - py.test --verbose --cov=intake_xarray tests
 
 about:
-  home: https://github.com/ContinuumIO/intake-netcdf
+  home: https://github.com/ContinuumIO/intake-xarray
   license: BSD
   license_file: LICENSE
   summary: |
-    NetCDF plugin for Intake
+    xarray plugin for Intake

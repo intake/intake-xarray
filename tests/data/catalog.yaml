@@ -1,10 +1,10 @@
 plugins:
   source:
-    - module: intake_netcdf
+    - module: intake_xarray
 sources:
-  netcdf_source:
-    description: example netcdf source plugin
-    driver: netcdf
+  xarray_source:
+    description: example xarray source plugin
+    driver: xarray
     args: 
       urlpath: !template '{{ CATALOG_DIR }}/example_1.nc'
       chunks: {}
