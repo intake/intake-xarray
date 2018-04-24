@@ -11,7 +11,7 @@ def catalog1():
     return Catalog(os.path.join(path, 'data', 'catalog.yaml'))
 
 def test_catalog(catalog1, dataset):
-    source = catalog1['netcdf_source'].get()
+    source = catalog1['xarray_source'].get()
     ds = source.read()
 
     assert ds.dims == dataset.dims

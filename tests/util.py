@@ -3,7 +3,7 @@ import os
 import pytest
 import xarray as xr
 
-from intake_netcdf import NetCDFPlugin, NetCDFSource 
+from intake_xarray import XarrayPlugin, XarraySource 
 
 TEST_DATA_DIR = 'tests/data'
 TEST_DATA = 'example_1.nc'
@@ -11,7 +11,7 @@ TEST_URLPATH = os.path.join(TEST_DATA_DIR, TEST_DATA)
 
 @pytest.fixture
 def source():
-    return NetCDFSource(TEST_URLPATH, {})
+    return XarraySource(TEST_URLPATH, {})
 
 @pytest.fixture
 def dataset():
