@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 import os
 import pytest
 
 from intake.catalog import Catalog
-from .util import dataset   # noqa
+from .util import dataset  # noqa
 
 
 @pytest.fixture

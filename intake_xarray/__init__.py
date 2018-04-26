@@ -16,7 +16,9 @@ class NetCDFPlugin(base.Plugin):
 
     def __init__(self):
         super(NetCDFPlugin, self).__init__(
-            name='netcdf', version=__version__, container='xarray',
+            name='netcdf',
+            version=__version__,
+            container='xarray',
             partition_access=True)
 
     def open(self, urlpath, chunks, **kwargs):

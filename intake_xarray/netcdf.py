@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import xarray as xr
 from intake.source import base
 
@@ -21,8 +22,8 @@ class NetCDFSource(base.DataSource):
         self.chunks = chunks
         self._kwargs = xarray_kwargs or {}
         self._ds = None
-        super(NetCDFSource, self).__init__(container='xarray',
-                                           metadata=metadata)
+        super(NetCDFSource, self).__init__(
+            container='xarray', metadata=metadata)
 
     def _open_dataset(self):
         url = self.urlpath

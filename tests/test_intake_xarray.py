@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 
 import numpy as np
 import pytest
 import xarray as xr
 
-from .util import TEST_URLPATH, source, dataset   # noqa
+from .util import TEST_URLPATH, source, dataset  # noqa
 from intake_xarray.netcdf import NetCDFSource
 
 

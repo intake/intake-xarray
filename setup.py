@@ -1,8 +1,8 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
 import versioneer
-
 
 requires = open('requirements.txt').read().strip().split('\n')
 
@@ -21,5 +21,4 @@ setup(
     include_package_data=True,
     install_requires=requires,
     long_description=open('README.rst').read(),
-    zip_safe=False,
-)
+    zip_safe=False, )
