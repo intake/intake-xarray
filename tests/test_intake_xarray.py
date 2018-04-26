@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from .util import TEST_URLPATH, source, dataset
+from .util import TEST_URLPATH, source, dataset   # noqa
 from intake_xarray.netcdf import NetCDFSource
 
 
@@ -38,7 +38,7 @@ def test_read_chunked():
 
 def test_read_partition(source):
     with pytest.raises(NotImplementedError):
-        ds = source.read_partition(None)
+        source.read_partition(None)
 
 
 def test_to_dask(source, dataset):

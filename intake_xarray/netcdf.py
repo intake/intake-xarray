@@ -1,4 +1,3 @@
-import glob
 import xarray as xr
 from intake.source import base
 
