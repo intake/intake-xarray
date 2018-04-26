@@ -12,7 +12,7 @@ del get_versions
 
 
 class NetCDFPlugin(base.Plugin):
-    """Plugin for xarray reader"""
+    """Plugin for netcdf->xarray reader"""
 
     def __init__(self):
         super(NetCDFPlugin, self).__init__(
@@ -41,3 +41,32 @@ class NetCDFPlugin(base.Plugin):
             chunks=chunks,
             xarray_kwargs=source_kwargs,
             metadata=base_kwargs['metadata'])
+
+
+class ZarrPlugin(base.Plugin):
+    """zarr>xarray reader"""
+
+    def __init__(self):
+        super(ZarrPlugin, self).__init__(
+            name='zarr',
+            version=__version__,
+            container='xarray',
+            partition_access=True
+        )
+
+    def open(self, urlpath, storage_options=None, **kwargs):
+        """
+        Parameters
+        ----------
+        urlpath: str
+            Path to source. This can be a local directory or a remote data
+            service (i.e., with a protocol specifier like ``'s3://``).
+        storage_options: dict
+            Parameters passed to the backend file-system
+        kwargs:
+            Further parameters are passed to xr.open_zarr
+        """
+        from intake_xarray.xzarr import ZarrSource
+        base_kwargs, source_kwargs = self.separate_base_kwargs(kwargs)
+        return ZarrSource(urlpath, storage_options, base_kwargs['metadata'],
+                          **source_kwargs)

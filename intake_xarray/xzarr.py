@@ -4,7 +4,7 @@ from dask.bytes.core import get_fs, infer_options, update_storage_options
 
 
 class ZarrSource(base.DataSource):
-    """Open a xarray file.
+    """Open a xarray dataset.
 
     Parameters
     ----------
