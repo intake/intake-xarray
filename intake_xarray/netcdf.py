@@ -65,3 +65,4 @@ class NetCDFSource(base.DataSource):
 
     def close(self):
         self._ds.close()
+        self._ds = None
