@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import xarray as xr
-from intake.source import base
+from intake_xarray.source import base
 
 
 class NetCDFSource(base.DataSource):
