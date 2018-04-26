@@ -4,7 +4,7 @@ plugins:
 sources:
   xarray_source:
     description: example xarray source plugin
-    driver: xarray
+    driver: netcdf
     args: 
-      urlpath: !template '{{ CATALOG_DIR }}/example_1.nc'
+      urlpath: '{{ CATALOG_DIR }}/example_1.nc'
       chunks: {}

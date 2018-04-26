@@ -1,14 +1,11 @@
 
 import numpy as np
-import os
 import pytest
-import pandas as pd
-import time
 import xarray as xr
 
-from .util import source, dataset, TEST_URLPATH
+from .util import TEST_URLPATH, source, dataset
+from intake_xarray.netcdf import NetCDFSource
 
-from intake_xarray import XarrayPlugin, XarraySource 
 
 def test_discover(source, dataset):
     r = source.discover()
@@ -22,6 +19,7 @@ def test_discover(source, dataset):
     assert source.metadata['data_vars'] == tuple(dataset.data_vars.keys())
     assert source.metadata['coords'] == tuple(dataset.coords.keys())
 
+
 def test_read(source, dataset):
     ds = source.read()
 
@@ -29,16 +27,19 @@ def test_read(source, dataset):
     assert np.all(ds.temp == dataset.temp)
     assert np.all(ds.rh == dataset.rh)
 
+
 def test_read_chunked():
-    source = XarraySource(TEST_URLPATH, chunks={'lon': 2})
+    source = NetCDFSource(TEST_URLPATH, chunks={'lon': 2})
     ds = source.read_chunked()
     dataset = xr.open_dataset(TEST_URLPATH, chunks={'lon': 2})
 
     assert ds.temp.chunks == dataset.temp.chunks
 
+
 def test_read_partition(source):
     with pytest.raises(NotImplementedError):
         ds = source.read_partition(None)
+
 
 def test_to_dask(source, dataset):
     ds = source.to_dask()
