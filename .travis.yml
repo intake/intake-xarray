@@ -4,7 +4,7 @@ os:
   - linux
 env:
   matrix:
-  - CONDA_PY=35
+  - CONDA_PY=36
   global:
     secure: OqHGuTssGxl/GeL+3NmZaFpgeqADlQgG+AdfxNY33tgcaGK/CGBeJRAxaM9IAxXgW8HQybsuZNRf3mtvXZPMjuN5noOl5TYSUf1pmODg46BurMQx1FzIN+f+qBCWAsnm96q1+/RCXDwPf/nXkFpdYDtlPgaXwFdisJ5bT4yv+DVszX6qd3CceKwcCD+StmWB08p4lwcqbAU8itEovQJmaaxzoWup8bzbGprzRGenGGtiLG9MbJ1azBp8qF10xnHRXJgt/8H3mPrT8V7o8P877AVcT1uubqLA7rjak43obcVv8Z8UCZZGdTM5PH05dQO02hKL1GzoI0qA+6K4xWSGTnwcnJnKVFzPlNmlJDG3rG5mROvWH06nGEMy4r0/6bevwz3xYE9LdB2JBDpMX+nIS26ysIpslmnzXsSYxjbE9aY3PfQpJMwM5JFXYXWMZNXGJrN5Bb2+6pFLuUcSterka9Ub5ccRRhOXacXHzZx3OOdSJbJ/IF1wlO7DfjN2JouVLqKm8KkysJmQ9GhY8fcKcuzdi8AGycjSEzVo7wrSRkNZNhitYULs/i7Tco0qppZR6mgqJgNzUPspuEylMZ1aDbT9iijR6lh1t78HvezldQLIJbd8tEyvvMFvz8mnZzQtpUXeHPqQknkmb2z381dJPJYlcuP+tbUK/HDwP2Ghzmc=
 install:
@@ -17,14 +17,24 @@ install:
 - |
   echo "Configuring conda."
   source $HOME/miniconda3/bin/activate root
-  conda config --add channels conda-forge
-  conda install -y -c defaults -c intake conda-build anaconda-client intake xarray
-  conda install -y ciocheck
+  conda install -y conda-build anaconda-client
 script:
-- conda build -c intake -c defaults -c conda-forge ./conda
-- if [[ -n "${TRAVIS_TAG}" ]]; then anaconda -t ${ANACONDA_TOKEN} upload `conda build
-  -c intake/label/main --output ./conda`; fi
-- ciocheck --config=.ciocheck intake_xarray
+- |
+  flake8 .
+  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+      conda build -c intake -c defaults -c conda-forge ./conda
+  else
+      # Workaround for Travis-CI bug #2: https://github.com/travis-ci/travis-ci/issues/7773
+      conda build -c intake -c defaults -c conda-forge --no-test ./conda
+  fi
+- |
+  if [ -n "$TRAVIS_TAG" ]; then
+      # If tagged git version, upload package to main channel
+      anaconda -t ${ANACONDA_TOKEN} upload -u intake --force `conda build --output ./conda`
+  else
+      # Otherwise upload package to dev channel
+      anaconda -t ${ANACONDA_TOKEN} upload -u intake --label dev --force `conda build --output ./conda`
+  fi
 notifications:
   email: false
   on_success: change
