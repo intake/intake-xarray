@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-# -----------------------------------------------------------------------------
-# Copyright 2016 Continuum Analytics, Inc.
-#
-# May be copied and distributed freely only as part of an Anaconda or
-# Miniconda installation.
-# -----------------------------------------------------------------------------
 from intake.source import base
 import xarray as xr
 from ._version import get_versions
@@ -74,8 +67,10 @@ class ZarrPlugin(base.Plugin):
 
 
 class DataSourceMixin:
+    """Common behaviours for plugins in this repo"""
 
     def _get_schema(self):
+        """Make schema object, which embeds xarray object and some details"""
         if self._ds is None:
             self._open_dataset()
 
@@ -93,19 +88,27 @@ class DataSourceMixin:
             extra_metadata=metadata)
 
     def read(self):
+        """Return a version of the xarray with all the data in memory"""
         self._load_metadata()
         return self._ds.load()
 
     def read_chunked(self):
+        """Return xarray object (which will have chunks)"""
         self._load_metadata()
         return self._ds
 
     def read_partition(self, i):
+        """Fetch one chunk of data at tuple index i
+
+        (not yet implemented)
+        """
         raise NotImplementedError
 
     def to_dask(self):
+        """Return xarray object where variables are dask arrays"""
         return self.read_chunked()
 
     def close(self):
+        """Delete open file from memory"""
         self._ds.close()
         self._ds = None

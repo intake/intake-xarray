@@ -3,6 +3,7 @@ import xarray as xr
 from intake.source import base
 from . import DataSourceMixin
 
+
 class NetCDFSource(DataSourceMixin, base.DataSource):
     """Open a xarray file.
 

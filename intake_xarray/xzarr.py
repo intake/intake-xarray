@@ -31,8 +31,11 @@ class ZarrSource(DataSourceMixin, base.DataSource):
         update_storage_options(options, self.storage_options)
 
         self._fs, _ = get_fs(protocol, options)
-        self._mapper = get_mapper(protocol, self._fs, urlpath)
-        self._ds = xr.open_zarr(self._mapper, **self.kwargs)
+        if protocol != 'file':
+            self._mapper = get_mapper(protocol, self._fs, urlpath)
+            self._ds = xr.open_zarr(self._mapper, **self.kwargs)
+        else:
+            self._ds = xr.open_zarr(self.urlpath, **self.kwargs)
 
     def close(self):
         super(ZarrSource, self).close()
