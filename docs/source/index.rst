@@ -1,4 +1,4 @@
-Welcome to intake_netcdf's documentation!
+Welcome to intake_xarray's documentation!
 ================================================
 
 .. toctree::

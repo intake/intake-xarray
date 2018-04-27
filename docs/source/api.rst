@@ -1,13 +1,20 @@
 API Reference
 =============
 
-.. currentmodule:: intake_netcdf
 .. autosummary::
-   Plugin
-   NetCDFSource
+   intake_xarray.NetCDFPlugin
+   intake_xarray.ZarrPlugin
+   intake_xarray.netcdf.NetCDFSource
+   intake_xarray.xzarr.ZarrSource
 
-.. autoclass:: Plugin
+.. autoclass:: intake_xarray.NetCDFPlugin
    :members:
 
-.. autoclass:: NetCDFSource
+.. autoclass:: intake_xarray.ZarrPlugin
+   :members:
+
+.. autoclass:: intake_xarray.netcdf.NetCDFSource
+   :members:
+
+.. autoclass:: intake_xarray.xzarr.ZarrSource
    :members:

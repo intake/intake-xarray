@@ -21,6 +21,7 @@ requirements:
     - python
     - scipy
     - xarray
+    - zarr
 
 test:
   source_files:
