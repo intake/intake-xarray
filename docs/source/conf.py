@@ -20,7 +20,6 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -81,7 +80,6 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -112,12 +110,10 @@ html_sidebars = {
     ]
 }
 
-
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'intake_netcdfdoc'
-
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -147,16 +143,12 @@ latex_documents = [
      u'Joseph Crail', 'manual'),
 ]
 
-
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'intake_netcdf', u'intake_netcdf Documentation',
-     [author], 1)
-]
-
+man_pages = [(master_doc, 'intake_netcdf', u'intake_netcdf Documentation',
+              [author], 1)]
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -164,10 +156,6 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'intake_netcdf', u'intake_netcdf Documentation',
-     author, 'intake_netcdf', 'One line description of project.',
-     'Miscellaneous'),
+    (master_doc, 'intake_netcdf', u'intake_netcdf Documentation', author,
+     'intake_netcdf', 'One line description of project.', 'Miscellaneous'),
 ]
-
-
-

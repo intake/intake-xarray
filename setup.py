@@ -1,15 +1,15 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
-version = '0.0.1'
-
+import versioneer
 
 requires = open('requirements.txt').read().strip().split('\n')
 
 setup(
     name='intake-xarray',
-    version=version,
-    description='xarray plugin for Intake',
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
+    description='xarray plugins for Intake',
     url='https://github.com/ContinuumIO/intake-xarray',
     maintainer='Mike McCarty',
     maintainer_email='mmccarty@anaconda.com',
@@ -20,5 +20,4 @@ setup(
     include_package_data=True,
     install_requires=requires,
     long_description=open('README.rst').read(),
-    zip_safe=False,
-)
+    zip_safe=False, )

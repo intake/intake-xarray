@@ -1,12 +1,14 @@
 package:
    name: intake-xarray
-   version: 0.0.1
+   version: {{ GIT_DESCRIBE_TAG }}
 
 source:
    path: ..
+git:
+  depth: false
 
 build:
-  number: 0
+  number: {{ GIT_DESCRIBE_NUMBER }}
   script: python setup.py install --single-version-externally-managed --record=record.txt
   noarch: python
 
@@ -25,9 +27,6 @@ test:
     - tests
   requires:
     - pytest
-    - pytest-cov
-    - coverage
-    - ciocheck
   commands:
     - py.test --verbose
 
@@ -36,4 +35,4 @@ about:
   license: BSD
   license_file: LICENSE
   summary: |
-    xarray plugin for Intake
+    xarray plugins for Intake
