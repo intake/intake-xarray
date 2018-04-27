@@ -1,9 +1,10 @@
 import xarray as xr
 from intake.source import base
 from dask.bytes.core import get_fs, infer_options, update_storage_options
+from . import DataSourceMixin
 
 
-class ZarrSource(base.DataSource):
+class ZarrSource(DataSourceMixin, base.DataSource):
     """Open a xarray dataset.
 
     Parameters
@@ -33,40 +34,8 @@ class ZarrSource(base.DataSource):
         self._mapper = get_mapper(protocol, self._fs, urlpath)
         self._ds = xr.open_zarr(self._mapper, **self.kwargs)
 
-    def _get_schema(self):
-        if self._ds is None:
-            self._open_dataset()
-
-        metadata = {
-            'dims': dict(self._ds.dims),
-            'data_vars': tuple(self._ds.data_vars.keys()),
-            'coords': tuple(self._ds.coords.keys())
-        }
-        metadata.update(self._ds.attrs)
-        return base.Schema(
-            datashape=None,
-            dtype=xr.Dataset,
-            shape=None,
-            npartitions=None,
-            extra_metadata=metadata)
-
-    def read(self):
-        self._load_metadata()
-        return self._ds.load()
-
-    def read_chunked(self):
-        self._load_metadata()
-        return self._ds
-
-    def read_partition(self, i):
-        raise NotImplementedError
-
-    def to_dask(self):
-        return self.read_chunked()
-
     def close(self):
-        self._ds.close()
-        self._ds = None
+        super(ZarrSource, self).close()
         self._fs = None
         self._mapper = None
 
