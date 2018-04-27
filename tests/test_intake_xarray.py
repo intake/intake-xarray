@@ -4,11 +4,12 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from .util import TEST_URLPATH, source, dataset  # noqa
-from intake_xarray.netcdf import NetCDFSource
+from .util import TEST_URLPATH, cdf_source, zarr_source, dataset  # noqa
 
 
-def test_discover(source, dataset):
+@pytest.mark.parametrize('source', ['cdf', 'zarr'])
+def test_discover(source, cdf_source, zarr_source, dataset):
+    source = {'cdf': cdf_source, 'zarr': zarr_source}[source]
     r = source.discover()
 
     assert r['datashape'] is None
@@ -17,32 +18,33 @@ def test_discover(source, dataset):
 
     assert source.datashape is None
     assert source.metadata['dims'] == dict(dataset.dims)
-    assert source.metadata['data_vars'] == tuple(dataset.data_vars.keys())
-    assert source.metadata['coords'] == tuple(dataset.coords.keys())
+    assert set(source.metadata['data_vars']) == set(dataset.data_vars.keys())
+    assert set(source.metadata['coords']) == set(dataset.coords.keys())
 
 
-def test_read(source, dataset):
+@pytest.mark.parametrize('source', ['cdf', 'zarr'])
+def test_read(source, cdf_source, zarr_source, dataset):
+    source = {'cdf': cdf_source, 'zarr': zarr_source}[source]
+
+    ds = source.read_chunked()
+    assert ds.temp.chunks
+
     ds = source.read()
-
     assert ds.dims == dataset.dims
     assert np.all(ds.temp == dataset.temp)
     assert np.all(ds.rh == dataset.rh)
 
 
-def test_read_chunked():
-    source = NetCDFSource(TEST_URLPATH, chunks={'lon': 2})
-    ds = source.read_chunked()
-    dataset = xr.open_dataset(TEST_URLPATH, chunks={'lon': 2})
-
-    assert ds.temp.chunks == dataset.temp.chunks
-
-
-def test_read_partition(source):
+@pytest.mark.parametrize('source', ['cdf', 'zarr'])
+def test_read_partition(source, cdf_source, zarr_source):
+    source = {'cdf': cdf_source, 'zarr': zarr_source}[source]
     with pytest.raises(NotImplementedError):
         source.read_partition(None)
 
 
-def test_to_dask(source, dataset):
+@pytest.mark.parametrize('source', ['cdf', 'zarr'])
+def test_to_dask(source, cdf_source, zarr_source, dataset):
+    source = {'cdf': cdf_source, 'zarr': zarr_source}[source]
     ds = source.to_dask()
 
     assert ds.dims == dataset.dims
