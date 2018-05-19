@@ -1,5 +1,4 @@
 from intake.source import base
-import xarray as xr
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
@@ -18,6 +17,16 @@ class NetCDFPlugin(base.Plugin):
     def open(self, urlpath, chunks, **kwargs):
         """
         Create NetCDFSource instance
+
+        Open any file types available to xarray.
+
+        If `pynio`_ is installed, additional file-types such as GRIB(2) are
+        supported. Use the keyword ``engine='pynio'``.
+
+        .. pynio: https://github.com/NCAR/pynio
+
+        If passing multiple files, kwargs should include ``concat_dim=``
+        keyword, the dimension name to give the file index.
 
         Parameters
         ----------
@@ -82,7 +91,7 @@ class DataSourceMixin:
         metadata.update(self._ds.attrs)
         return base.Schema(
             datashape=None,
-            dtype=xr.Dataset,
+            dtype=self._ds,
             shape=None,
             npartitions=None,
             extra_metadata=metadata)

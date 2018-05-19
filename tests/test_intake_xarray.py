@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
-
+import os
 import numpy as np
 import pytest
 import xarray as xr
+
+import intake
+
+here = os.path.dirname(__file__)
 
 from .util import TEST_URLPATH, cdf_source, zarr_source, dataset  # noqa
 
@@ -13,7 +17,7 @@ def test_discover(source, cdf_source, zarr_source, dataset):
     r = source.discover()
 
     assert r['datashape'] is None
-    assert r['dtype'] is xr.Dataset
+    assert isinstance(r['dtype'], xr.Dataset)
     assert r['metadata'] is not None
 
     assert source.datashape is None
@@ -50,3 +54,15 @@ def test_to_dask(source, cdf_source, zarr_source, dataset):
     assert ds.dims == dataset.dims
     assert np.all(ds.temp == dataset.temp)
     assert np.all(ds.rh == dataset.rh)
+
+
+def test_grib_dask():
+    pytest.importorskip('Nio')
+    import dask.array as da
+    cat = intake.Catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    x = cat.grib.to_dask()
+    assert len(x.fileno) == 2
+    assert isinstance(x.APCP_P8_L1_GLL0_acc6h.data, da.Array)
+    values = x.APCP_P8_L1_GLL0_acc6h.data.compute()
+    x2 = cat.grib.read()
+    assert (values == x2.APCP_P8_L1_GLL0_acc6h.values).all()
