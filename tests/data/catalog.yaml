@@ -17,3 +17,9 @@ sources:
       chunks:
         lv_ISBL0: 2
       concat_dim: fileno
+  tiff_source:
+    description: "https://github.com/mapbox/rasterio/blob/master/tests/data/RGB.byte.tif"
+    driver: rasterio
+    args:
+      urlpath: '{{ CATALOG_DIR }}/RGB.byte.tif'
+      chunks: {}

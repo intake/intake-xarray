@@ -66,3 +66,16 @@ def test_grib_dask():
     values = x.APCP_P8_L1_GLL0_acc6h.data.compute()
     x2 = cat.grib.read()
     assert (values == x2.APCP_P8_L1_GLL0_acc6h.values).all()
+
+
+def test_rasterio():
+    import dask.array as da
+    pytest.importorskip('rasterio')
+    cat = intake.Catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    s = cat.tiff_source
+    info = s.discover()
+    assert info['shape'] == (3, 718, 791)
+    x = s.to_dask()
+    assert isinstance(x.data, da.Array)
+    x = s.read()
+    assert x.data.shape == (3, 718, 791)
