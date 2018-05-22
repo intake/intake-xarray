@@ -1,5 +1,4 @@
 from intake.source import base
-import xarray as xr
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
@@ -19,18 +18,68 @@ class NetCDFPlugin(base.Plugin):
         """
         Create NetCDFSource instance
 
+        Open any file types available to xarray.
+
+        If `pynio`_ is installed, additional file-types such as GRIB(2) are
+        supported. Use the keyword ``engine='pynio'``.
+
+        .. pynio: https://github.com/NCAR/pynio
+
+        If passing multiple files, kwargs should include ``concat_dim=``
+        keyword, the dimension name to give the file index.
+
         Parameters
         ----------
         urlpath: str
             Path to source file(s).
         chunks: int or dict
             Chunks is used to load the new dataset into dask
-            arrays. ``chunks={}`` loads the dataset with dask using a single
-            chunk for all arrays.
+            arrays. Use ``chunks={}`` to load without chunking.
+        kwargs:
+            Further parameters are passed to xr.open_dataset or
+            xr.open_mfdataset .
         """
         from intake_xarray.netcdf import NetCDFSource
         base_kwargs, source_kwargs = self.separate_base_kwargs(kwargs)
         return NetCDFSource(
+            urlpath=urlpath,
+            chunks=chunks,
+            xarray_kwargs=source_kwargs,
+            metadata=base_kwargs['metadata'])
+
+
+class RasterIOPlugin(base.Plugin):
+    """Plugin for xarray reader via rasterIO"""
+
+    def __init__(self):
+        super(RasterIOPlugin, self).__init__(
+            name='rasterio',
+            version=__version__,
+            container='xarray',
+            partition_access=True)
+
+    def open(self, urlpath, chunks, **kwargs):
+        """
+        Create RasterIOSource instance
+
+        If `rasterio`_ is installed, additional file-types such as GeoTIFF are
+        supported.
+
+        .. rasterio: https://rasterio.readthedocs.io
+
+        Parameters
+        ----------
+        urlpath: str
+            Path to source file.
+        chunks: int or dict
+            Chunks is used to load the new dataset into dask
+            arrays. Use ``chunks={}`` to load without chunking.
+        kwargs:
+            Further parameters are passed to xr.open_rasterio
+        """
+        from intake_xarray.raster import RasterIOSource
+        base_kwargs, source_kwargs = self.separate_base_kwargs(kwargs)
+        return RasterIOSource(
             urlpath=urlpath,
             chunks=chunks,
             xarray_kwargs=source_kwargs,
@@ -82,7 +131,7 @@ class DataSourceMixin:
         metadata.update(self._ds.attrs)
         return base.Schema(
             datashape=None,
-            dtype=xr.Dataset,
+            dtype=self._ds,
             shape=None,
             npartitions=None,
             extra_metadata=metadata)
