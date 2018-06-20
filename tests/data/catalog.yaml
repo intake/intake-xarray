@@ -22,4 +22,5 @@ sources:
     driver: rasterio
     args:
       urlpath: '{{ CATALOG_DIR }}/RGB.byte.tif'
-      chunks: {}
+      chunks:
+        band: 1

@@ -151,7 +151,25 @@ class DataSourceMixin:
 
         (not yet implemented)
         """
-        raise NotImplementedError
+        from dask.delayed import Delayed
+        import dask
+        import numpy as np
+        self._load_metadata()
+        if isinstance(i, int):
+            i = (i, )
+        if not isinstance(i, (tuple, list)):
+            raise TypeError('For Xarray sources, must specify partition as '
+                            'tuple')
+        if hasattr(self._ds, 'variables'):  # is dataset?
+            arr = self._ds[i[0]].data
+            i = i[1:]
+        else:
+            arr = self._ds.data
+        if isinstance(arr, np.ndarray):
+            return arr
+        key = (arr.name, ) + i
+        d = Delayed(key, arr.dask)
+        return dask.compute(d)[0]
 
     def to_dask(self):
         """Return xarray object where variables are dask arrays"""

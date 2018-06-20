@@ -39,11 +39,23 @@ def test_read(source, cdf_source, zarr_source, dataset):
     assert np.all(ds.rh == dataset.rh)
 
 
-@pytest.mark.parametrize('source', ['cdf', 'zarr'])
-def test_read_partition(source, cdf_source, zarr_source):
-    source = {'cdf': cdf_source, 'zarr': zarr_source}[source]
-    with pytest.raises(NotImplementedError):
+def test_read_partition_cdf(cdf_source):
+    source = cdf_source
+    with pytest.raises(TypeError):
         source.read_partition(None)
+    out = source.read_partition(('temp', 0, 0, 0, 0))
+    d = source.to_dask()['temp'].data
+    expected = d[:1, :4, :5, :10].compute()
+    assert np.all(out == expected)
+
+
+def test_read_partition_zarr(zarr_source):
+    source = zarr_source
+    with pytest.raises(TypeError):
+        source.read_partition(None)
+    out = source.read_partition(('temp', 0, 0, 0, 0))
+    expected = source.to_dask()['temp'].values
+    assert np.all(out == expected)
 
 
 @pytest.mark.parametrize('source', ['cdf', 'zarr'])
@@ -79,3 +91,16 @@ def test_rasterio():
     assert isinstance(x.data, da.Array)
     x = s.read()
     assert x.data.shape == (3, 718, 791)
+
+
+def test_read_partition_tiff():
+    pytest.importorskip('rasterio')
+    cat = intake.Catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    s = cat.tiff_source()
+
+    with pytest.raises(TypeError):
+        s.read_partition(None)
+    out = s.read_partition((0, 0, 0))
+    d = s.to_dask().data
+    expected = d[:1].compute()
+    assert np.all(out == expected)
