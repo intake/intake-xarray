@@ -157,6 +157,8 @@ class DataSourceMixin:
         self._load_metadata()
         if isinstance(i, int):
             i = (i, )
+        elif isinstance(i, list):
+            i = tuple(i)
         if not isinstance(i, (tuple, list)):
             raise TypeError('For Xarray sources, must specify partition as '
                             'tuple')
@@ -177,5 +179,4 @@ class DataSourceMixin:
 
     def close(self):
         """Delete open file from memory"""
-        self._ds.close()
         self._ds = None
