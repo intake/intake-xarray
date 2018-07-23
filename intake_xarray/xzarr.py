@@ -1,10 +1,9 @@
 import xarray as xr
-from intake.source import base
 from dask.bytes.core import get_fs, infer_options, update_storage_options
-from . import DataSourceMixin
+from .base import DataSourceMixin
 
 
-class ZarrSource(DataSourceMixin, base.DataSource):
+class ZarrSource(DataSourceMixin):
     """Open a xarray dataset.
 
     Parameters
@@ -17,10 +16,10 @@ class ZarrSource(DataSourceMixin, base.DataSource):
     kwargs:
         Further parameters are passed to xr.open_zarr
     """
+    name = 'zarr'
 
     def __init__(self, urlpath, storage_options=None, metadata=None, **kwargs):
-        super(ZarrSource, self).__init__(
-              container='xarray', metadata=metadata)
+        super(ZarrSource, self).__init__(metadata=metadata)
         self.urlpath = urlpath
         self.storage_options = storage_options
         self.kwargs = kwargs

@@ -3,14 +3,14 @@ import numpy as np
 import os
 import pytest
 
-from intake.catalog import Catalog
+from intake import open_catalog
 from .util import dataset  # noqa
 
 
 @pytest.fixture
 def catalog1():
     path = os.path.dirname(__file__)
-    return Catalog(os.path.join(path, 'data', 'catalog.yaml'))
+    return open_catalog(os.path.join(path, 'data', 'catalog.yaml'))
 
 
 def test_catalog(catalog1, dataset):
