@@ -1,9 +1,9 @@
 import xarray as xr
 from intake.source import base
-from . import DataSourceMixin
+from .base import DataSourceMixin
 
 
-class RasterIOSource(DataSourceMixin, base.DataSource):
+class RasterIOSource(DataSourceMixin):
     """Open a xarray dataset via RasterIO.
 
     This creates an xarray.array, not a dataset (i.e., there is exactly one
@@ -24,14 +24,14 @@ class RasterIOSource(DataSourceMixin, base.DataSource):
         arrays. ``chunks={}`` loads the dataset with dask using a single
         chunk for all arrays.
     """
+    name = 'rasterio'
 
     def __init__(self, urlpath, chunks, xarray_kwargs=None, metadata=None):
         self.urlpath = urlpath
         self.chunks = chunks
         self._kwargs = xarray_kwargs or {}
         self._ds = None
-        super(RasterIOSource, self).__init__(
-            container='xarray', metadata=metadata)
+        super(RasterIOSource, self).__init__(metadata=metadata)
 
     def _open_dataset(self):
         self._ds = xr.open_rasterio(self.urlpath, chunks=self.chunks,

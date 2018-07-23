@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import xarray as xr
-from intake.source import base
-from . import DataSourceMixin
+from .base import DataSourceMixin
 
 
-class NetCDFSource(DataSourceMixin, base.DataSource):
+class NetCDFSource(DataSourceMixin):
     """Open a xarray file.
 
     Parameters
@@ -17,14 +16,14 @@ class NetCDFSource(DataSourceMixin, base.DataSource):
         arrays. ``chunks={}`` loads the dataset with dask using a single
         chunk for all arrays.
     """
+    name = 'netcdf'
 
     def __init__(self, urlpath, chunks, xarray_kwargs=None, metadata=None):
         self.urlpath = urlpath
         self.chunks = chunks
         self._kwargs = xarray_kwargs or {}
         self._ds = None
-        super(NetCDFSource, self).__init__(
-            container='xarray', metadata=metadata)
+        super(NetCDFSource, self).__init__(metadata=metadata)
 
     def _open_dataset(self):
         url = self.urlpath

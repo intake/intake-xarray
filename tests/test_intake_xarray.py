@@ -71,7 +71,7 @@ def test_to_dask(source, cdf_source, zarr_source, dataset):
 def test_grib_dask():
     pytest.importorskip('Nio')
     import dask.array as da
-    cat = intake.Catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
     x = cat.grib.to_dask()
     assert len(x.fileno) == 2
     assert isinstance(x.APCP_P8_L1_GLL0_acc6h.data, da.Array)
@@ -83,7 +83,7 @@ def test_grib_dask():
 def test_rasterio():
     import dask.array as da
     pytest.importorskip('rasterio')
-    cat = intake.Catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
     s = cat.tiff_source
     info = s.discover()
     assert info['shape'] == (3, 718, 791)
@@ -95,7 +95,7 @@ def test_rasterio():
 
 def test_read_partition_tiff():
     pytest.importorskip('rasterio')
-    cat = intake.Catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
     s = cat.tiff_source()
 
     with pytest.raises(TypeError):
