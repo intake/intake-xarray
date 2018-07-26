@@ -2,7 +2,6 @@
 import os
 import numpy as np
 import pytest
-import xarray as xr
 
 import intake
 
@@ -17,7 +16,7 @@ def test_discover(source, cdf_source, zarr_source, dataset):
     r = source.discover()
 
     assert r['datashape'] is None
-    assert isinstance(r['dtype'], xr.Dataset)
+    assert isinstance(r['dtype'], dict)
     assert r['metadata'] is not None
 
     assert source.datashape is None

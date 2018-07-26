@@ -1,5 +1,6 @@
 from . import __version__
 from intake.source.base import DataSource, Schema
+from .xarray_container import ZarrSerialiser
 
 
 class DataSourceMixin(DataSource):
@@ -21,7 +22,7 @@ class DataSourceMixin(DataSource):
         metadata.update(self._ds.attrs)
         return Schema(
             datashape=None,
-            dtype=self._ds,
+            dtype=s,
             shape=None,
             npartitions=None,
             extra_metadata=metadata)
@@ -41,8 +42,6 @@ class DataSourceMixin(DataSource):
 
         (not yet implemented)
         """
-        from dask.delayed import Delayed
-        import dask
         import numpy as np
         self._load_metadata()
         if not isinstance(i, (tuple, list)):
@@ -55,9 +54,8 @@ class DataSourceMixin(DataSource):
             arr = self._ds.data
         if isinstance(arr, np.ndarray):
             return arr
-        key = (arr.name, ) + i
-        d = Delayed(key, arr.dask)
-        return dask.compute(d)[0]
+        # dask array
+        return arr.blocks[i].compute()
 
     def to_dask(self):
         """Return xarray object where variables are dask arrays"""
