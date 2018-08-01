@@ -22,7 +22,7 @@ class DataSourceMixin(DataSource):
         metadata.update(self._ds.attrs)
         return Schema(
             datashape=None,
-            dtype=s,
+            dtype=None,
             shape=None,
             npartitions=None,
             extra_metadata=metadata)
