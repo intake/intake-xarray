@@ -46,6 +46,7 @@ def test_remote_netcdf(intake_server):
 
 
 def test_remote_tiff(intake_server):
+    pytest.importorskip('rasterio')
     cat_local = intake.open_catalog(cat_file)
     cat = intake.open_catalog(intake_server)
     assert 'tiff_source' in cat
