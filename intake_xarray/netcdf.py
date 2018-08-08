@@ -18,10 +18,11 @@ class NetCDFSource(DataSourceMixin):
     """
     name = 'netcdf'
 
-    def __init__(self, urlpath, chunks, xarray_kwargs=None, metadata=None):
+    def __init__(self, urlpath, chunks, xarray_kwargs=None, metadata=None,
+                 **kwargs):
         self.urlpath = urlpath
         self.chunks = chunks
-        self._kwargs = xarray_kwargs or {}
+        self._kwargs = xarray_kwargs or kwargs
         self._ds = None
         super(NetCDFSource, self).__init__(metadata=metadata)
 
