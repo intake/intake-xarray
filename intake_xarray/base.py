@@ -43,15 +43,15 @@ class DataSourceMixin(DataSource):
 
     def read_partition(self, i):
         """Fetch one chunk of data at tuple index i
-
-        (not yet implemented)
         """
         import numpy as np
         self._load_metadata()
         if not isinstance(i, (tuple, list)):
             raise TypeError('For Xarray sources, must specify partition as '
                             'tuple')
-        if hasattr(self._ds, 'variables'):  # is dataset?
+        if isinstance(i, list):
+            i = tuple(i)
+        if hasattr(self._ds, 'variables') or i[0] in self._ds.coords:
             arr = self._ds[i[0]].data
             i = i[1:]
         else:
@@ -68,3 +68,4 @@ class DataSourceMixin(DataSource):
     def close(self):
         """Delete open file from memory"""
         self._ds = None
+        self._schema = None

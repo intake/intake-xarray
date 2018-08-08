@@ -96,24 +96,26 @@ class RemoteXarray(RemoteSource):
             # aparently can't replace coords in-place
             self._ds = self._ds.assign_coords(**{c: self._get_partition((c, ))
                                                  for c in metadata['coords']})
-            if hasattr(self._ds, 'variables'):  # is DataSet?
-                for var in list(self._ds.data_vars):
-                    name = '-'.join(['remote-array', var, self._source_id])
-                    arr = self._ds[var].data
-                    chunks = arr.chunks
-                    nparts = (range(len(n)) for n in chunks)
-                    dask = {
-                        (name, ) + part: (get_partition, self.url, self.headers,
-                                          self._source_id, self.container,
-                                          (var, ) + part)
+            for var in list(self._ds.data_vars):
+                name = '-'.join(['remote-xarray', var, self._source_id])
+                arr = self._ds[var].data
+                chunks = arr.chunks
+                nparts = (range(len(n)) for n in chunks)
+                if self.metadata.get('array', False):
+                    extra = ()
+                else:
+                    extra = (var, )
+                dask = {
+                    (name, ) + part: (get_partition, self.url, self.headers,
+                                      self._source_id, self.container,
+                                      extra + part)
 
-                        for part in itertools.product(*nparts)
-                    }
-                    self._ds[var].data = da.Array(dask, name, chunks,
-                                                  arr.dtype, arr.shape)
-            else:
-                raise NotImplementedError  # DataArray
-
+                    for part in itertools.product(*nparts)
+                }
+                self._ds[var].data = da.Array(dask, name, chunks,
+                                              arr.dtype, arr.shape)
+            if self.metadata.get('array', False):
+                self._ds = self._ds[self.metadata.get('array')]
         return self._schema
 
     def _get_partition(self, i):
