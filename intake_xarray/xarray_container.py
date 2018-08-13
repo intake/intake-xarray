@@ -19,6 +19,7 @@ class ZarrSerialiser(dict):
 
 
 def noop(*args):
+    """Filler function to put in the ``store()`` dask graphs"""
     return None
 
 
@@ -67,16 +68,36 @@ def serialize_zarr_ds(ds):
 
 
 class RemoteXarray(RemoteSource):
+    """
+    An xarray data source on the server
+    """
     name = 'remote-xarray'
     container = 'xarray'
 
     def __init__(self, url, headers, **kwargs):
+        """
+        Initialise local xarray, whose dask arrays contain tasks that pull data
+
+        The matadata contains a key "internal", which is a result of running
+        ``serialize_zarr_ds`` on the xarray on the server. It is a dict
+        containing the metadata parts of the original dataset (i.e., the
+        keys with names like ".z*"). This can be opened by xarray as-is, and
+        will make a local xarray object. In ``._get_schema()``, the numpy
+        parts (coordinates) are fetched and the dask-array parts (cariables)
+        have their dask graphs redefined to tasks that fetch data from the
+        server.
+        """
         import xarray as xr
         super(RemoteXarray, self).__init__(url, headers, **kwargs)
         self._schema = None
         self._ds = xr.open_zarr(self.metadata['internal'])
 
     def _get_schema(self):
+        """Reconstruct xarray arrays
+
+        The schema returned is not very informative as a representation,
+        this method fetches coordinates data and creates dask arrays.
+        """
         import dask.array as da
         if self._schema is None:
             metadata = {
@@ -94,14 +115,18 @@ class RemoteXarray(RemoteSource):
                 npartitions=None,
                 extra_metadata=metadata)
             # aparently can't replace coords in-place
+            # we immediately fetch the values of coordinates
+            # TODO: in the future, these could be functions from the metadata?
             self._ds = self._ds.assign_coords(**{c: self._get_partition((c, ))
                                                  for c in metadata['coords']})
             for var in list(self._ds.data_vars):
+                # recreate dask arrays
                 name = '-'.join(['remote-xarray', var, self._source_id])
                 arr = self._ds[var].data
                 chunks = arr.chunks
                 nparts = (range(len(n)) for n in chunks)
                 if self.metadata.get('array', False):
+                    # original was an array, not dataset - no variable name
                     extra = ()
                 else:
                     extra = (var, )
@@ -119,6 +144,12 @@ class RemoteXarray(RemoteSource):
         return self._schema
 
     def _get_partition(self, i):
+        """
+        The partition should look like ("var_name", int, int...), where the
+        number of ints matches the number of coordinate axes in the named
+        variable, and is between 0 and the number of chunks in each axis. For
+        an array, as opposed to a dataset, omit the variable name.
+        """
         return get_partition(self.url, self.headers, self._source_id,
                              self.container, i)
 
@@ -127,6 +158,7 @@ class RemoteXarray(RemoteSource):
         return self._ds
 
     def read_chunked(self):
+        """The dask repr is the authoritative chunked version"""
         self._get_schema()
         return self._ds
 
