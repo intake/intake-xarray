@@ -1,5 +1,6 @@
 from . import __version__
 from intake.source.base import DataSource, Schema
+from .xarray_container import ZarrSerialiser
 
 
 class DataSourceMixin(DataSource):
@@ -10,24 +11,28 @@ class DataSourceMixin(DataSource):
 
     def _get_schema(self):
         """Make schema object, which embeds xarray object and some details"""
+        from .xarray_container import serialize_zarr_ds
 
         self.urlpath, *_ = self._get_cache(self.urlpath)
 
         if self._ds is None:
             self._open_dataset()
 
-        metadata = {
-            'dims': dict(self._ds.dims),
-            'data_vars': tuple(self._ds.data_vars.keys()),
-            'coords': tuple(self._ds.coords.keys())
-        }
-        metadata.update(self._ds.attrs)
-        return Schema(
-            datashape=None,
-            dtype=self._ds,
-            shape=None,
-            npartitions=None,
-            extra_metadata=metadata)
+            metadata = {
+                'dims': dict(self._ds.dims),
+                'data_vars': {k: list(self._ds[k].coords)
+                              for k in self._ds.data_vars.keys()},
+                'coords': tuple(self._ds.coords.keys()),
+                'internal': serialize_zarr_ds(self._ds)
+            }
+            metadata.update(self._ds.attrs)
+            self._schema = Schema(
+                datashape=None,
+                dtype=None,
+                shape=None,
+                npartitions=None,
+                extra_metadata=metadata)
+        return self._schema
 
     def read(self):
         """Return a version of the xarray with all the data in memory"""
@@ -41,26 +46,23 @@ class DataSourceMixin(DataSource):
 
     def read_partition(self, i):
         """Fetch one chunk of data at tuple index i
-
-        (not yet implemented)
         """
-        from dask.delayed import Delayed
-        import dask
         import numpy as np
         self._load_metadata()
         if not isinstance(i, (tuple, list)):
             raise TypeError('For Xarray sources, must specify partition as '
                             'tuple')
-        if hasattr(self._ds, 'variables'):  # is dataset?
+        if isinstance(i, list):
+            i = tuple(i)
+        if hasattr(self._ds, 'variables') or i[0] in self._ds.coords:
             arr = self._ds[i[0]].data
             i = i[1:]
         else:
             arr = self._ds.data
         if isinstance(arr, np.ndarray):
             return arr
-        key = (arr.name, ) + i
-        d = Delayed(key, arr.dask)
-        return dask.compute(d)[0]
+        # dask array
+        return arr.blocks[i].compute()
 
     def to_dask(self):
         """Return xarray object where variables are dask arrays"""
@@ -69,3 +71,4 @@ class DataSourceMixin(DataSource):
     def close(self):
         """Delete open file from memory"""
         self._ds = None
+        self._schema = None

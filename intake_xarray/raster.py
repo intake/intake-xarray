@@ -1,6 +1,6 @@
 import xarray as xr
 from intake.source import base
-from .base import DataSourceMixin
+from .base import DataSourceMixin, Schema
 
 import glob
 
@@ -54,20 +54,34 @@ class RasterIOSource(DataSourceMixin):
 
     def _get_schema(self):
         """Make schema object, which embeds xarray object and some details"""
+        from .xarray_container import serialize_zarr_ds
+        import msgpack
 
         self.urlpath, *_ = self._get_cache(self.urlpath)
 
         if self._ds is None:
             self._open_dataset()
 
-        metadata = {
-            'dims': self._ds.dims,
-            'coords': tuple(self._ds.coords.keys())
-        }
-        metadata.update(self._ds.attrs)
-        return base.Schema(
-            datashape=None,
-            dtype=self._ds,
-            shape=self._ds.shape,
-            npartitions=None,
-            extra_metadata=metadata)
+            ds2 = xr.Dataset({'raster': self._ds})
+            metadata = {
+                'dims': dict(ds2.dims),
+                'data_vars': {k: list(ds2[k].coords)
+                              for k in ds2.data_vars.keys()},
+                'coords': tuple(ds2.coords.keys()),
+                'internal': serialize_zarr_ds(ds2),
+                'array': 'raster'
+            }
+            for k, v in self._ds.attrs.items():
+                try:
+                    msgpack.packb(v)
+                    metadata[k] = v
+                except TypeError:
+                    pass
+            self._schema = Schema(
+                datashape=None,
+                dtype=str(self._ds.dtype),
+                shape=self._ds.shape,
+                npartitions=self._ds.data.npartitions,
+                extra_metadata=metadata)
+
+        return self._schema
