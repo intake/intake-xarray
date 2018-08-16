@@ -24,3 +24,12 @@ sources:
       urlpath: '{{ CATALOG_DIR }}/RGB.byte.tif'
       chunks:
         band: 1
+      concat_dim: concat_dim
+  tiff_glob_source:
+    description: "https://github.com/mapbox/rasterio/blob/master/tests/data/RGB.byte.tif"
+    driver: rasterio
+    args:
+      urlpath: '{{ CATALOG_DIR }}/*.tif'
+      chunks:
+        band: 1
+      concat_dim: concat_dim
