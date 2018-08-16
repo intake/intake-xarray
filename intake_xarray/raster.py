@@ -54,6 +54,9 @@ class RasterIOSource(DataSourceMixin):
 
     def _get_schema(self):
         """Make schema object, which embeds xarray object and some details"""
+
+        self.urlpath, *_ = self._get_cache(self.urlpath)
+
         if self._ds is None:
             self._open_dataset()
 
