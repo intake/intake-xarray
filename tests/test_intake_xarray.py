@@ -104,6 +104,28 @@ def test_rasterio_glob():
     x = s.read()
     assert x.data.shape == (1, 3, 718, 791)
 
+def test_rasterio_empty_glob():
+    import dask.array as da
+    pytest.importorskip('rasterio')
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    s = cat.empty_glob
+    with pytest.raises(Exception):
+        s.discover()
+
+def test_rasterio_cached_glob():
+    import dask.array as da
+    pytest.importorskip('rasterio')
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    s = cat.cached_tiff_glob_source
+    cache = s.cache[0]
+    info = s.discover()
+    assert info['shape'] == (1, 3, 718, 791)
+    x = s.to_dask()
+    assert isinstance(x.data, da.Array)
+    x = s.read()
+    assert x.data.shape == (1, 3, 718, 791)
+    cache.clear_all()
+
 
 def test_read_partition_tiff():
     pytest.importorskip('rasterio')

@@ -45,6 +45,8 @@ class RasterIOSource(DataSourceMixin):
     def _open_dataset(self):
         if '*' in self.urlpath:
             files = sorted(glob.glob(self.urlpath))
+            if len(files) == 0:
+                raise Exception("No files found at {}".format(self.urlpath))
             self._ds = self._open_files(files)
         elif isinstance(self.urlpath, list):
             self._ds = self._open_files(self.urlpath)
