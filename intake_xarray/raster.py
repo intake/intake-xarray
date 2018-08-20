@@ -2,6 +2,8 @@ import xarray as xr
 from intake.source import base
 from .base import DataSourceMixin, Schema
 
+import glob
+
 
 class RasterIOSource(DataSourceMixin):
     """Open a xarray dataset via RasterIO.
@@ -26,21 +28,39 @@ class RasterIOSource(DataSourceMixin):
     """
     name = 'rasterio'
 
-    def __init__(self, urlpath, chunks, xarray_kwargs=None, metadata=None):
+    def __init__(self, urlpath, chunks, concat_dim, xarray_kwargs=None, metadata=None):
         self.urlpath = urlpath
+        self.original_urlpath = urlpath
         self.chunks = chunks
+        self.dim = 'concat_dim'
         self._kwargs = xarray_kwargs or {}
         self._ds = None
         super(RasterIOSource, self).__init__(metadata=metadata)
 
+    def _open_files(self, files):
+        return xr.concat([xr.open_rasterio(f,chunks=self.chunks, **self._kwargs)
+                    for f in files], dim=self.dim)
+
+
     def _open_dataset(self):
-        self._ds = xr.open_rasterio(self.urlpath, chunks=self.chunks,
-                                    **self._kwargs)
+        if '*' in self.urlpath:
+            files = sorted(glob.glob(self.urlpath))
+            if len(files) == 0:
+                raise Exception("No files found at {}".format(self.urlpath))
+            self._ds = self._open_files(files)
+        elif isinstance(self.urlpath, list):
+            self._ds = self._open_files(self.urlpath)
+        else:
+            self._ds = xr.open_rasterio(self.urlpath, chunks=self.chunks,
+                                        **self._kwargs)
 
     def _get_schema(self):
         """Make schema object, which embeds xarray object and some details"""
         from .xarray_container import serialize_zarr_ds
         import msgpack
+
+        self.urlpath, *_ = self._get_cache(self.urlpath)
+
         if self._ds is None:
             self._open_dataset()
 

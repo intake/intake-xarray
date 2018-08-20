@@ -12,6 +12,9 @@ class DataSourceMixin(DataSource):
     def _get_schema(self):
         """Make schema object, which embeds xarray object and some details"""
         from .xarray_container import serialize_zarr_ds
+
+        self.urlpath, *_ = self._get_cache(self.urlpath)
+
         if self._ds is None:
             self._open_dataset()
 
