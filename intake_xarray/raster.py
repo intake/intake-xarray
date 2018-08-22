@@ -28,7 +28,8 @@ class RasterIOSource(DataSourceMixin):
     """
     name = 'rasterio'
 
-    def __init__(self, urlpath, chunks, concat_dim, xarray_kwargs=None, metadata=None):
+    def __init__(self, urlpath, chunks, concat_dim, xarray_kwargs=None, 
+                 metadata=None, **kwargs):
         self.urlpath = urlpath
         self.original_urlpath = urlpath
         self.chunks = chunks
