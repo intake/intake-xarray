@@ -25,3 +25,11 @@ sources:
         y: 256
       concat_dim: band
       storage_options: {'anon': True}
+    metadata:
+      plots:
+        band_image:
+          kind: 'image'
+          x: 'x'
+          y: 'y'
+          groupby: 'band'
+          datashade: True
