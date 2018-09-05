@@ -1,6 +1,8 @@
 import xarray as xr
+import numpy as np
 from intake.source import base
 from .base import DataSourceMixin, Schema
+from .utils import rev_format, pattern_to_glob
 
 import glob
 
@@ -28,9 +30,10 @@ class RasterIOSource(DataSourceMixin):
     """
     name = 'rasterio'
 
-    def __init__(self, urlpath, chunks, concat_dim, xarray_kwargs=None, 
+    def __init__(self, urlpath, chunks, concat_dim, xarray_kwargs=None,
                  metadata=None, **kwargs):
-        self.urlpath = urlpath
+        self.pattern = urlpath
+        self.urlpath = pattern_to_glob(urlpath)
         self.original_urlpath = urlpath
         self.chunks = chunks
         self.dim = concat_dim
@@ -39,9 +42,17 @@ class RasterIOSource(DataSourceMixin):
         super(RasterIOSource, self).__init__(metadata=metadata)
 
     def _open_files(self, files):
-        return xr.concat([xr.open_rasterio(f,chunks=self.chunks, **self._kwargs)
-                    for f in files], dim=self.dim)
+        das = []
+        for f in files:
+            da = xr.open_rasterio(f, chunks=self.chunks, **self._kwargs)
+            dim_shape = da.sizes.get(self.dim, 1)
 
+            coords = {}
+            for k, v in rev_format(self.pattern, f).items():
+                coords[k] = xr.DataArray(np.full(dim_shape, v), dims=self.dim)
+            das.append(da.assign_coords(**coords))
+
+        return xr.concat(das, dim=self.dim)
 
     def _open_dataset(self):
         if '*' in self.urlpath:
