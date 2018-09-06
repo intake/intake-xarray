@@ -2,7 +2,7 @@ import xarray as xr
 import numpy as np
 from intake.source import base
 from .base import DataSourceMixin, Schema
-from .utils import rev_format, pattern_to_glob
+from .utils import reverse_format, pattern_to_glob
 
 import glob
 
@@ -48,7 +48,7 @@ class RasterIOSource(DataSourceMixin):
             dim_shape = da.sizes.get(self.dim, 1)
 
             coords = {}
-            for k, v in rev_format(self.pattern, f).items():
+            for k, v in reverse_format(self.pattern, f).items():
                 coords[k] = xr.DataArray(np.full(dim_shape, v), dims=self.dim)
             das.append(da.assign_coords(**coords))
 
