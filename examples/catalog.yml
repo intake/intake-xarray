@@ -17,14 +17,19 @@ sources:
   l5_proposed:
     description: Images contain Landsat Surface Reflectance Level-2 Science Product L5.
     driver: rasterio
+    cache:
+      - argkey: urlpath
+        regex: 'earth-data/landsat'
+        type: file
     args:
-      urlpath: '{{ CATALOG_DIR }}data/LT05_L1TP_042033_{start_date:%Y%m%d}_{end_date:%Y%m%d}_01_T1_sr_band{band:1d}.tif'
+      urlpath: 's3://earth-data/landsat/LT05_L1TP_042033_{start_date:%Y%m%d}_{end_date:%Y%m%d}_01_T1_sr_band{band:1d}.tif'
       chunks:
         band: 1
         x: 256
         y: 256
       concat_dim: band
       storage_options: {'anon': True}
+      parse_template: False
     metadata:
       plots:
         band_image:

@@ -1,8 +1,7 @@
 import xarray as xr
 import numpy as np
-from intake.source import base
+from intake.source import base, utils
 from .base import DataSourceMixin, Schema
-from .utils import reverse_format, pattern_to_glob
 
 import glob
 
@@ -27,14 +26,20 @@ class RasterIOSource(DataSourceMixin):
         Chunks is used to load the new dataset into dask
         arrays. ``chunks={}`` loads the dataset with dask using a single
         chunk for all arrays.
+    path_as_pattern: bool, optional
+        Whether to treat the path as a pattern (ie. ``data_{field}.tiff``)
+        and create new coodinates in the output corresponding to pattern
+        fields. Default is True.
     """
     name = 'rasterio'
 
     def __init__(self, urlpath, chunks, concat_dim, xarray_kwargs=None,
-                 metadata=None, **kwargs):
-        self.pattern = urlpath
-        self.urlpath = pattern_to_glob(urlpath)
-        self.original_urlpath = urlpath
+                 metadata=None, path_as_pattern=True, **kwargs):
+        self.urlpath = utils.path_to_glob(urlpath) if path_as_pattern else urlpath
+        if path_as_pattern and self.urlpath != urlpath:
+            self.pattern = utils.path_to_pattern(urlpath, metadata)
+        else:
+            self.pattern = None
         self.chunks = chunks
         self.dim = concat_dim
         self._kwargs = xarray_kwargs or {}
@@ -48,8 +53,9 @@ class RasterIOSource(DataSourceMixin):
             dim_shape = da.sizes.get(self.dim, 1)
 
             coords = {}
-            for k, v in reverse_format(self.pattern, f).items():
-                coords[k] = xr.DataArray(np.full(dim_shape, v), dims=self.dim)
+            if self.pattern is not None:
+                for k, v in utils.reverse_format(self.pattern, f).items():
+                    coords[k] = xr.DataArray(np.full(dim_shape, v), dims=self.dim)
             das.append(da.assign_coords(**coords))
 
         return xr.concat(das, dim=self.dim)
