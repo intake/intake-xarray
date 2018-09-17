@@ -69,11 +69,6 @@ class RasterIOSource(DataSourceMixin):
                 for k, values in reverse_formats(self.pattern, files).items()
             }
 
-        field_already_in_data = set(coords).intersection(set(out.coords))
-        if field_already_in_data:
-            raise ValueError('Field(s) in urlpath pattern already '
-                             'in data {}'.format(field_already_in_data))
-
         return out.assign_coords(**coords)
 
     def _open_dataset(self):

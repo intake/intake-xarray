@@ -76,4 +76,4 @@ sources:
       urlpath: '{{ CATALOG_DIR }}/little_{band}.tif'
       chunks:
         band: 3
-      concat_dim: new_dim
+      concat_dim: band

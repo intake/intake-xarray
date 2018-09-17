@@ -159,10 +159,11 @@ def test_read_pattern_concat_on_new_dim():
     assert len(da.color) == 2
 
 
-def test_read_pattern_raises_error():
+def test_read_pattern_field_as_band():
     pytest.importorskip('rasterio')
     cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
-    colors = cat.pattern_tiff_source_path_pattern_field_as_band
+    colors = cat.pattern_tiff_source_path_pattern_field_as_band()
 
-    with pytest.raises(ValueError):
-        colors.read()
+    da = colors.read()
+    assert len(da.band) == 6
+    assert set(da.band.data) == set(['red', 'green'])
