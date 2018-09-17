@@ -77,3 +77,12 @@ sources:
       chunks:
         band: 3
       concat_dim: band
+  pattern_tiff_source_path_not_as_pattern:
+    description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
+    driver: rasterio
+    args:
+      urlpath: '{{ CATALOG_DIR }}/color_with_special{}.tif'
+      chunks:
+        band: 3
+      concat_dim: band
+      path_as_pattern: False

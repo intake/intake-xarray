@@ -167,3 +167,12 @@ def test_read_pattern_field_as_band():
     da = colors.read()
     assert len(da.band) == 6
     assert set(da.band.data) == set(['red', 'green'])
+
+
+def test_read_pattern_path_not_as_pattern():
+    pytest.importorskip('rasterio')
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    green = cat.pattern_tiff_source_path_not_as_pattern()
+
+    da = green.read()
+    assert len(da.band) == 3
