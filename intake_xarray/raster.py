@@ -1,5 +1,6 @@
 import xarray as xr
-from intake.source import base
+import numpy as np
+from intake.source.utils import path_to_glob, path_to_pattern, reverse_formats
 from .base import DataSourceMixin, Schema
 
 import glob
@@ -18,20 +19,34 @@ class RasterIOSource(DataSourceMixin):
 
     Parameters
     ----------
-    urlpath: str
-        Path to source file. Must be a single local file of a type
-        supported by rasterIO.
+    urlpath: str, location of data
+        May be a local path, or remote path if including a protocol specifier
+        such as ``'s3://'``. May include glob wildcards or format pattern strings.
+        Must be a format supported by rasterIO (normally GeoTiff).
+        Some examples:
+            - ``{{ CATALOG_DIR }}data/RGB.tif``
+            - ``s3://data/*.tif``
+            - ``s3://data/landsat8_band{band}.tif``
+            - ``s3://data/{location}/landsat8_band{band}.tif``
+            - ``{{ CATALOG_DIR }}data/landsat8_{start_date:%Y%m%d}_band{band}.csv``
     chunks: int or dict
         Chunks is used to load the new dataset into dask
         arrays. ``chunks={}`` loads the dataset with dask using a single
         chunk for all arrays.
+    path_as_pattern: bool, optional
+        Whether to treat the path as a pattern (ie. ``data_{field}.tiff``)
+        and create new coodinates in the output corresponding to pattern
+        fields. Default is True.
     """
     name = 'rasterio'
 
-    def __init__(self, urlpath, chunks, concat_dim, xarray_kwargs=None, 
-                 metadata=None, **kwargs):
-        self.urlpath = urlpath
-        self.original_urlpath = urlpath
+    def __init__(self, urlpath, chunks, concat_dim, xarray_kwargs=None,
+                 metadata=None, path_as_pattern=True, **kwargs):
+        self.urlpath = path_to_glob(urlpath) if path_as_pattern else urlpath
+        if path_as_pattern and self.urlpath != urlpath:
+            self.pattern = path_to_pattern(urlpath, metadata)
+        else:
+            self.pattern = None
         self.chunks = chunks
         self.dim = concat_dim
         self._kwargs = xarray_kwargs or {}
@@ -39,9 +54,22 @@ class RasterIOSource(DataSourceMixin):
         super(RasterIOSource, self).__init__(metadata=metadata)
 
     def _open_files(self, files):
-        return xr.concat([xr.open_rasterio(f,chunks=self.chunks, **self._kwargs)
-                    for f in files], dim=self.dim)
+        das = [xr.open_rasterio(f, chunks=self.chunks, **self._kwargs)
+               for f in files]
+        out = xr.concat(das, dim=self.dim)
 
+        coords = {}
+        if self.pattern:
+            coords = {
+                k: xr.concat(
+                    [xr.DataArray(
+                        np.full(das[i].sizes.get(self.dim, 1), v),
+                        dims=self.dim
+                    ) for i, v in enumerate(values)], dim=self.dim)
+                for k, values in reverse_formats(self.pattern, files).items()
+            }
+
+        return out.assign_coords(**coords)
 
     def _open_dataset(self):
         if '*' in self.urlpath:
