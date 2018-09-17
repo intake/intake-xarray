@@ -1,6 +1,6 @@
 import xarray as xr
 import numpy as np
-from intake.source.utils import path_to_glob, path_to_pattern, reverse_format
+from intake.source.utils import path_to_glob, path_to_pattern, reverse_formats
 from .base import DataSourceMixin, Schema
 
 import glob
@@ -54,19 +54,27 @@ class RasterIOSource(DataSourceMixin):
         super(RasterIOSource, self).__init__(metadata=metadata)
 
     def _open_files(self, files):
-        das = []
-        for f in files:
-            da = xr.open_rasterio(f, chunks=self.chunks, **self._kwargs)
-            dim_shape = da.sizes.get(self.dim, 1)
+        das = [xr.open_rasterio(f, chunks=self.chunks, **self._kwargs)
+               for f in files]
+        out = xr.concat(das, dim=self.dim)
 
-            coords = {}
-            if self.pattern is not None:
-                for k, v in reverse_format(self.pattern, f).items():
-                    coords[k] = xr.DataArray(
-                        np.full(dim_shape, v), dims=self.dim)
-            das.append(da.assign_coords(**coords))
+        coords = {}
+        if self.pattern:
+            coords = {
+                k: xr.concat(
+                    [xr.DataArray(
+                        np.full(das[i].sizes.get(self.dim, 1), v),
+                        dims=self.dim
+                    ) for i, v in enumerate(values)], dim=self.dim)
+                for k, values in reverse_formats(self.pattern, files).items()
+            }
 
-        return xr.concat(das, dim=self.dim)
+        field_already_in_data = set(coords).intersection(set(out.coords))
+        if field_already_in_data:
+            raise ValueError('Field(s) in urlpath pattern already '
+                             'in data {}'.format(field_already_in_data))
+
+        return out.assign_coords(**coords)
 
     def _open_dataset(self):
         if '*' in self.urlpath:

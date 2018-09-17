@@ -104,13 +104,14 @@ def test_rasterio_glob():
     x = s.read()
     assert x.data.shape == (1, 3, 718, 791)
 
+
 def test_rasterio_empty_glob():
-    import dask.array as da
     pytest.importorskip('rasterio')
     cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
     s = cat.empty_glob
     with pytest.raises(Exception):
         s.discover()
+
 
 def test_rasterio_cached_glob():
     import dask.array as da
@@ -138,3 +139,30 @@ def test_read_partition_tiff():
     d = s.to_dask().data
     expected = d[:1].compute()
     assert np.all(out == expected)
+
+
+def test_read_pattern_concat_on_existing_dim():
+    pytest.importorskip('rasterio')
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    colors = cat.pattern_tiff_source_concat_on_band()
+
+    da = colors.read()
+    assert len(da.color) == 6
+
+
+def test_read_pattern_concat_on_new_dim():
+    pytest.importorskip('rasterio')
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    colors = cat.pattern_tiff_source_concat_on_new_dim()
+
+    da = colors.read()
+    assert len(da.color) == 2
+
+
+def test_read_pattern_raises_error():
+    pytest.importorskip('rasterio')
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    colors = cat.pattern_tiff_source_path_pattern_field_as_band
+
+    with pytest.raises(ValueError):
+        colors.read()
