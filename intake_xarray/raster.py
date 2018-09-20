@@ -1,12 +1,13 @@
 import xarray as xr
 import numpy as np
-from intake.source.utils import path_to_glob, path_to_pattern, reverse_formats
+from intake.source.base import PatternMixin
+from intake.source.utils import reverse_formats
 from .base import DataSourceMixin, Schema
 
 import glob
 
 
-class RasterIOSource(DataSourceMixin):
+class RasterIOSource(DataSourceMixin, PatternMixin):
     """Open a xarray dataset via RasterIO.
 
     This creates an xarray.array, not a dataset (i.e., there is exactly one
@@ -19,7 +20,7 @@ class RasterIOSource(DataSourceMixin):
 
     Parameters
     ----------
-    urlpath: str, location of data
+    urlpath: str or iterable, location of data
         May be a local path, or remote path if including a protocol specifier
         such as ``'s3://'``. May include glob wildcards or format pattern strings.
         Must be a format supported by rasterIO (normally GeoTiff).
@@ -28,25 +29,23 @@ class RasterIOSource(DataSourceMixin):
             - ``s3://data/*.tif``
             - ``s3://data/landsat8_band{band}.tif``
             - ``s3://data/{location}/landsat8_band{band}.tif``
-            - ``{{ CATALOG_DIR }}data/landsat8_{start_date:%Y%m%d}_band{band}.csv``
+            - ``{{ CATALOG_DIR }}data/landsat8_{start_date:%Y%m%d}_band{band}.tif``
     chunks: int or dict
         Chunks is used to load the new dataset into dask
         arrays. ``chunks={}`` loads the dataset with dask using a single
         chunk for all arrays.
-    path_as_pattern: bool, optional
-        Whether to treat the path as a pattern (ie. ``data_{field}.tiff``)
+    path_as_pattern: bool or str, optional
+        Whether to treat the path as a pattern (ie. ``data_{field}.tif``)
         and create new coodinates in the output corresponding to pattern
-        fields. Default is True.
+        fields. If str, is treated as pattern to match on. Default is True.
     """
     name = 'rasterio'
 
-    def __init__(self, urlpath, chunks, concat_dim, xarray_kwargs=None,
-                 metadata=None, path_as_pattern=True, **kwargs):
-        self.urlpath = path_to_glob(urlpath) if path_as_pattern else urlpath
-        if path_as_pattern and self.urlpath != urlpath:
-            self.pattern = path_to_pattern(urlpath, metadata)
-        else:
-            self.pattern = None
+    def __init__(self, urlpath, chunks, concat_dim='concat_dim',
+                 xarray_kwargs=None, metadata=None, path_as_pattern=True,
+                 **kwargs):
+        self.path_as_pattern = path_as_pattern
+        self.urlpath = urlpath
         self.chunks = chunks
         self.dim = concat_dim
         self._kwargs = xarray_kwargs or {}
