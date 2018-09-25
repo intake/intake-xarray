@@ -200,3 +200,21 @@ def test_read_pattern_path_not_as_pattern():
 
     da = green.read()
     assert len(da.band) == 3
+
+
+def test_read_pattern_path_as_pattern_as_str_with_list_of_urlpaths():
+    pytest.importorskip('rasterio')
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    colors = cat.pattern_tiff_source_path_pattern_as_str()
+
+    da = colors.read()
+    assert da.shape == (2, 3, 64, 64)
+    assert len(da.color) == 2
+    assert set(da.color.data) == set(['red', 'green'])
+
+    assert da.sel(color='red').shape == (3, 64, 64)
+
+    rgb = {'red': [204, 17, 17], 'green': [17, 204, 17]}
+    for color, values in rgb.items():
+        for i, v in enumerate(values):
+            assert (da.sel(color=color).sel(band=i+1).values == v).all()

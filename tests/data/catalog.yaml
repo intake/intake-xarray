@@ -24,7 +24,6 @@ sources:
       urlpath: '{{ CATALOG_DIR }}/RGB.byte.tif'
       chunks:
         band: 1
-      concat_dim: concat_dim
   tiff_glob_source:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/RGB.byte.tif"
     driver: rasterio
@@ -32,7 +31,6 @@ sources:
       urlpath: '{{ CATALOG_DIR }}/*.byte.tif'
       chunks:
         band: 1
-      concat_dim: concat_dim
   empty_glob:
     description: Empty
     driver: rasterio
@@ -40,7 +38,6 @@ sources:
       urlpath: '{{ CATALOG_DIR }}/*.empty'
       chunks:
         band: 1
-      concat_dim: concat_dim
   cached_tiff_glob_source:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/RGB.byte.tif"
     driver: rasterio
@@ -52,7 +49,6 @@ sources:
       urlpath: '{{ CATALOG_DIR }}/*.byte.tif'
       chunks:
         band: 1
-      concat_dim: concat_dim
   pattern_tiff_source_concat_on_band:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
     driver: rasterio
@@ -86,3 +82,12 @@ sources:
         band: 3
       concat_dim: band
       path_as_pattern: False
+  pattern_tiff_source_path_pattern_as_str:
+    description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
+    driver: rasterio
+    args:
+      urlpath: ['{{ CATALOG_DIR }}/little_red.tif', '{{ CATALOG_DIR }}/little_green.tif']
+      chunks:
+        band: 3
+      concat_dim: color
+      path_as_pattern: '{{ CATALOG_DIR }}/little_{color}.tif'
