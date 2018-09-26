@@ -1,0 +1,16 @@
+plugins:
+  source:
+    - module: intake_xarray
+sources:
+  esgf:
+    description: CREATE sample
+    driver: opendap
+    #cache:
+    #  - argkey: urlpath
+    #    regex: ''
+    #    type: file
+    args:
+      urlpath: 'http://esgf.nccs.nasa.gov/thredds/dodsC/CREATE-IP/reanalysis/ECMWF/IFS-Cy31r2/day/atmos/pr/pr_day_reanalysis_IFS-Cy31r2_19790101-19791231.nc'
+      chunks: {}
+      xarray_kwargs:
+        decode_times: False

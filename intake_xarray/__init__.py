@@ -3,6 +3,7 @@ __version__ = get_versions()['version']
 del get_versions
 
 from .netcdf import NetCDFSource
+from .opendap import OpenDapSource
 from .raster import RasterIOSource
 from .xzarr import ZarrSource
 from .xarray_container import RemoteXarray
