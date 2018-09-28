@@ -5,7 +5,7 @@ sources:
   xarray_source:
     description: example xarray source plugin
     driver: netcdf
-    args: 
+    args:
       urlpath: '{{ CATALOG_DIR }}/example_1.nc'
       chunks: {}
   grib:
@@ -24,15 +24,13 @@ sources:
       urlpath: '{{ CATALOG_DIR }}/RGB.byte.tif'
       chunks:
         band: 1
-      concat_dim: concat_dim
   tiff_glob_source:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/RGB.byte.tif"
     driver: rasterio
     args:
-      urlpath: '{{ CATALOG_DIR }}/*.tif'
+      urlpath: '{{ CATALOG_DIR }}/*.byte.tif'
       chunks:
         band: 1
-      concat_dim: concat_dim
   empty_glob:
     description: Empty
     driver: rasterio
@@ -40,7 +38,6 @@ sources:
       urlpath: '{{ CATALOG_DIR }}/*.empty'
       chunks:
         band: 1
-      concat_dim: concat_dim
   cached_tiff_glob_source:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/RGB.byte.tif"
     driver: rasterio
@@ -49,7 +46,48 @@ sources:
         regex: '{{ CATALOG_DIR }}'
         type: file
     args:
-      urlpath: '{{ CATALOG_DIR }}/*.tif'
+      urlpath: '{{ CATALOG_DIR }}/*.byte.tif'
       chunks:
         band: 1
-      concat_dim: concat_dim
+  pattern_tiff_source_concat_on_band:
+    description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
+    driver: rasterio
+    args:
+      urlpath: '{{ CATALOG_DIR }}/little_{color}.tif'
+      chunks:
+        band: 3
+      concat_dim: band
+  pattern_tiff_source_concat_on_new_dim:
+    description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
+    driver: rasterio
+    args:
+      urlpath: '{{ CATALOG_DIR }}/little_{color}.tif'
+      chunks:
+        band: 3
+      concat_dim: new_dim
+  pattern_tiff_source_path_pattern_field_as_band:
+    description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
+    driver: rasterio
+    args:
+      urlpath: '{{ CATALOG_DIR }}/little_{band}.tif'
+      chunks:
+        band: 3
+      concat_dim: band
+  pattern_tiff_source_path_not_as_pattern:
+    description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
+    driver: rasterio
+    args:
+      urlpath: '{{ CATALOG_DIR }}/color_with_special{}.tif'
+      chunks:
+        band: 3
+      concat_dim: band
+      path_as_pattern: False
+  pattern_tiff_source_path_pattern_as_str:
+    description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
+    driver: rasterio
+    args:
+      urlpath: ['{{ CATALOG_DIR }}/little_red.tif', '{{ CATALOG_DIR }}/little_green.tif']
+      chunks:
+        band: 3
+      concat_dim: color
+      path_as_pattern: '{{ CATALOG_DIR }}/little_{color}.tif'

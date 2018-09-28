@@ -1,5 +1,5 @@
 from . import __version__
-from intake.source.base import DataSource, Schema
+from intake.source.base import DataSource, Schema, PatternMixin
 from .xarray_container import ZarrSerialiser
 
 

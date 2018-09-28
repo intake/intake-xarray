@@ -104,13 +104,14 @@ def test_rasterio_glob():
     x = s.read()
     assert x.data.shape == (1, 3, 718, 791)
 
+
 def test_rasterio_empty_glob():
-    import dask.array as da
     pytest.importorskip('rasterio')
     cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
     s = cat.empty_glob
     with pytest.raises(Exception):
         s.discover()
+
 
 def test_rasterio_cached_glob():
     import dask.array as da
@@ -138,3 +139,82 @@ def test_read_partition_tiff():
     d = s.to_dask().data
     expected = d[:1].compute()
     assert np.all(out == expected)
+
+
+def test_read_pattern_concat_on_existing_dim():
+    pytest.importorskip('rasterio')
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    colors = cat.pattern_tiff_source_concat_on_band()
+
+    da = colors.read()
+    assert da.shape == (6, 64, 64)
+    assert len(da.color) == 6
+    assert set(da.color.data) == set(['red', 'green'])
+
+    assert (da.band == [1, 2, 3, 1, 2, 3]).all()
+    assert da[da.color == 'red'].shape == (3, 64, 64)
+
+    rgb = {'red': [204, 17, 17], 'green': [17, 204, 17]}
+    for color, values in rgb.items():
+        for i, v in enumerate(values):
+            assert (da[da.color == color].sel(band=i+1).values == v).all()
+
+
+def test_read_pattern_concat_on_new_dim():
+    pytest.importorskip('rasterio')
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    colors = cat.pattern_tiff_source_concat_on_new_dim()
+
+    da = colors.read()
+    assert da.shape == (2, 3, 64, 64)
+    assert len(da.color) == 2
+    assert set(da.color.data) == set(['red', 'green'])
+    assert da[da.color == 'red'].shape == (1, 3, 64, 64)
+
+    rgb = {'red': [204, 17, 17], 'green': [17, 204, 17]}
+    for color, values in rgb.items():
+        for i, v in enumerate(values):
+            assert (da[da.color == color][0].sel(band=i+1).values == v).all()
+
+
+def test_read_pattern_field_as_band():
+    pytest.importorskip('rasterio')
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    colors = cat.pattern_tiff_source_path_pattern_field_as_band()
+
+    da = colors.read()
+    assert len(da.band) == 6
+    assert set(da.band.data) == set(['red', 'green'])
+    assert da[da.band == 'red'].shape == (3, 64, 64)
+
+    rgb = {'red': [204, 17, 17], 'green': [17, 204, 17]}
+    for color, values in rgb.items():
+        for i, v in enumerate(values):
+            assert (da[da.band == color][i].values == v).all()
+
+
+def test_read_pattern_path_not_as_pattern():
+    pytest.importorskip('rasterio')
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    green = cat.pattern_tiff_source_path_not_as_pattern()
+
+    da = green.read()
+    assert len(da.band) == 3
+
+
+def test_read_pattern_path_as_pattern_as_str_with_list_of_urlpaths():
+    pytest.importorskip('rasterio')
+    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
+    colors = cat.pattern_tiff_source_path_pattern_as_str()
+
+    da = colors.read()
+    assert da.shape == (2, 3, 64, 64)
+    assert len(da.color) == 2
+    assert set(da.color.data) == set(['red', 'green'])
+
+    assert da.sel(color='red').shape == (3, 64, 64)
+
+    rgb = {'red': [204, 17, 17], 'green': [17, 204, 17]}
+    for color, values in rgb.items():
+        for i, v in enumerate(values):
+            assert (da.sel(color=color).sel(band=i+1).values == v).all()
