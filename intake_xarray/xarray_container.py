@@ -105,8 +105,9 @@ class RemoteXarray(RemoteSource):
                 'data_vars': {k: list(self._ds[k].coords)
                               for k in self._ds.data_vars.keys()},
                 'coords': tuple(self._ds.coords.keys()),
-                'internal': serialize_zarr_ds(self._ds)
             }
+            if getattr(self, 'on_server', False):
+                metadata['internal'] = serialize_zarr_ds(self._ds)
             metadata.update(self._ds.attrs)
             self._schema = Schema(
                 datashape=None,
