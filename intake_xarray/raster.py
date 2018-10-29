@@ -98,9 +98,10 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
                 'data_vars': {k: list(ds2[k].coords)
                               for k in ds2.data_vars.keys()},
                 'coords': tuple(ds2.coords.keys()),
-                'internal': serialize_zarr_ds(ds2),
                 'array': 'raster'
             }
+            if getattr(self, 'on_server', False):
+                metadata['internal'] = serialize_zarr_ds(ds2)
             for k, v in self._ds.attrs.items():
                 try:
                     msgpack.packb(v)

@@ -13,7 +13,7 @@ class DataSourceMixin(DataSource):
         """Make schema object, which embeds xarray object and some details"""
         from .xarray_container import serialize_zarr_ds
 
-        self.urlpath, *_ = self._get_cache(self.urlpath)
+        self.urlpath = self._get_cache(self.urlpath)[0]
 
         if self._ds is None:
             self._open_dataset()
@@ -23,8 +23,9 @@ class DataSourceMixin(DataSource):
                 'data_vars': {k: list(self._ds[k].coords)
                               for k in self._ds.data_vars.keys()},
                 'coords': tuple(self._ds.coords.keys()),
-                'internal': serialize_zarr_ds(self._ds)
             }
+            if getattr(self, 'on_server', False):
+                metadata['internal'] = serialize_zarr_ds(self._ds)
             metadata.update(self._ds.attrs)
             self._schema = Schema(
                 datashape=None,
