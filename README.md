@@ -16,7 +16,7 @@ In Intake-xarray, there are plugins provided for reading data into xarray with.
 The conda install instructions are:
 
 ```
-conda install -c intake intake_xarray
+conda install -c intake intake-xarray
 ```
 
 To install optional dependencies:
