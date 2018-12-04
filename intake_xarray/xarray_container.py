@@ -163,6 +163,10 @@ class RemoteXarray(RemoteSource):
         self._get_schema()
         return self._ds
 
+    def read(self):
+        self._get_schema()
+        return self._ds.load()
+
     def close(self):
         self._ds = None
         self._schema = None
