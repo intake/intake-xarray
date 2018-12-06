@@ -68,7 +68,7 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
                 for k, values in reverse_formats(self.pattern, files).items()
             }
 
-        return out.assign_coords(**coords)
+        return out.assign_coords(**coords).chunk(self.chunks)
 
     def _open_dataset(self):
         if '*' in self.urlpath:

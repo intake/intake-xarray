@@ -20,7 +20,7 @@ class ZarrSerialiser(dict):
 
 def noop(*args):
     """Filler function to put in the ``store()`` dask graphs"""
-    return None
+    return 0
 
 
 def serialize_zarr_ds(ds):
@@ -46,24 +46,21 @@ def serialize_zarr_ds(ds):
     -------
     dictionary with .z* keys for the various elements of the original dataset.
     """
-    import dask.array as da
+    import dask
     s = ZarrSerialiser()
-    safe = {}
     try:
         attrs = ds.attrs.copy()
         ds.attrs.pop('_ARRAY_DIMENSIONS', None)  # zarr implementation detail
-        for name in ds.variables:
-            if not isinstance(ds[name].data, da.Array):
-                continue
-            d = ds[name].data
-            safe[name] = d.dask
-            d.dask = {k: ((noop,) if isinstance(k, tuple) else d.dask[k]) for
-                      k, v in d.dask.items()}
-        ds.to_zarr(s)
+        x = ds.to_zarr(s, compute=False)
+        x.dask = dict(x.dask)
+        for k, v in x.dask.items():
+            # replace the data writing funcs with no-op, so as not to waste
+            # time on serialization, when all we want is metadata
+            if isinstance(k, tuple) and k[0].startswith('store-'):
+                x.dask[k] = (noop, ) + x.dask[k][1:]
+        dask.compute(x, scheduler='threads')
     finally:
         ds.attrs = attrs
-        for name, dask in safe.items():
-            ds[name].data.dask = dask
     return s
 
 
