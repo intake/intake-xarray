@@ -14,34 +14,20 @@ sources:
       chunks: {}
       xarray_kwargs:
         decode_times: False
-  l5:
-    description: Images contain Landsat Surface Reflectance Level-2 Science Product L5.
+        
+  geotiff:
+    description: Geotiff image of Landsat Surface Reflectance Level-2 Science Product L5.
     driver: rasterio
     cache:
       - argkey: urlpath
         regex: 'earth-data/landsat'
         type: file
     args:
-      urlpath: 's3://earth-data/landsat/LT05_L1TP_042033_19881022_20161001_01_T1_sr_band*.tif'
+      urlpath: 's3://earth-data/landsat/small/LT05_L1TP_042033_{collection_date:%Y%m%d}_{processing_date:%Y%m%d}_01_T1_sr_band{band:1d}.tif'
       chunks:
         band: 1
-        x: 256
-        y: 256
-      concat_dim: band
-      storage_options: {'anon': True}
-  l5_proposed:
-    description: Images contain Landsat Surface Reflectance Level-2 Science Product L5.
-    driver: rasterio
-    cache:
-      - argkey: urlpath
-        regex: 'earth-data/landsat'
-        type: file
-    args:
-      urlpath: 's3://earth-data/landsat/LT05_L1TP_042033_{start_date:%Y%m%d}_{end_date:%Y%m%d}_01_T1_sr_band{band:1d}.tif'
-      chunks:
-        band: 1
-        x: 256
-        y: 256
+        x: 50
+        y: 50
       concat_dim: band
       storage_options: {'anon': True}
     metadata:
@@ -51,4 +37,78 @@ sources:
           x: 'x'
           y: 'y'
           groupby: 'band'
-          datashade: True
+          rasterize: True
+  
+  image:
+    description: Labeled images from UCMerced_LandUse/Images
+    origin: http://weegee.vision.ucmerced.edu/datasets/landuse.html
+    driver: image
+    cache:
+      - argkey: urlpath
+        regex: 'earth-data/UCMerced_LandUse'
+        type: file
+    parameters:
+      landuse:
+        description: one landuse to gather
+        type: str
+        default: 'airplane'
+      id:
+        description: one id to gather
+        type: int
+        default: 0
+    args:
+      urlpath: "s3://earth-data/UCMerced_LandUse/Images/{{ landuse }}/{{ landuse }}{{ '%02d' % id }}.tif"
+      storage_options: {'anon': True}
+  
+  images_labelled:
+    description: All the labeled images from UCMerced_LandUse/Images for one id
+    origin: http://weegee.vision.ucmerced.edu/datasets/landuse.html
+    driver: image
+    cache:
+      - argkey: urlpath
+        regex: 'earth-data/UCMerced_LandUse'
+        type: file
+    parameters:
+      id:
+        description: one id to gather
+        type: int
+        default: 0
+    args:
+      urlpath: "s3://earth-data/UCMerced_LandUse/Images/*/*{{ '%02d' % id }}.tif"
+      path_as_pattern: "Images/{landuse}/{}{id:2d}.tif"
+      storage_options: {'anon': True}
+      concat_dim: id
+      merge_dim: landuse
+      
+  images_unlabelled:
+    description: All the labeled images from UCMerced_LandUse/Images for one id
+    origin: http://weegee.vision.ucmerced.edu/datasets/landuse.html
+    driver: image
+    cache:
+      - argkey: urlpath
+        regex: 'earth-data/UCMerced_LandUse'
+        type: file
+    parameters:
+      id:
+        description: one id to gather
+        type: int
+        default: 0
+    args:
+      urlpath: "s3://earth-data/UCMerced_LandUse/Images/*/*{{ '%02d' % id }}.tif"
+      storage_options: {'anon': True}
+      
+  grib_thredds:
+    description: Publicly available grib data available on thredds via opendap protocol
+    driver: xarray
+    args:
+      urlpath: 'http://thredds.ucar.edu/thredds/dodsC/grib/FNMOC/WW3/Global_1p0deg/Best'
+      
+  netcdf_url:
+    description: Publicly available netcdf data available via https request
+    driver: netcdf
+    cache:
+      - argkey: urlpath
+        regex: 'https://github.com/pydata/xarray-data/blob/master'
+        type: file
+    args:
+      urlpath: 'https://github.com/pydata/xarray-data/blob/master/air_temperature.nc?raw=true'

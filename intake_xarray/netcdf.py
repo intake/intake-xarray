@@ -1,33 +1,39 @@
 # -*- coding: utf-8 -*-
 import xarray as xr
-from .base import DataSourceMixin
+from .base import XarraySource
 
 
-class NetCDFSource(DataSourceMixin):
-    """Open a xarray file.
+class NetCDFSource(XarraySource):
+    """Open a netcdf file.
+
+    This creates an xarray.Dataset.
+
+    See http://xarray.pydata.org/en/stable/generated/xarray.open_dataset.html
+    for the file formats supported and possible extra arguments.
+
+    NOTE: When reading from OpenDAP URLs do not set the ``chunks`` option to
+    use provided default chunking.
 
     Parameters
     ----------
-    urlpath: str
-        Path to source file. May include glob "*" characters. Must be a
-        location in the local file-system.
-    chunks: int or dict
-        Chunks is used to load the new dataset into dask
-        arrays. ``chunks={}`` loads the dataset with dask using a single
-        chunk for all arrays.
+    urlpath : str
+        Path to source file. May include glob "*" characters or format
+        pattern strings. Accepts un-authenticated OpenDAP urls, and any
+        remote source can be used as long as caching is enabled.
+        Must be a format supported by ``xr.open_dataset``.
+
+        Some examples:
+            - ``s3://data/*.nc``
+            - ``http://thredds.ucar.edu/thredds/dodsC/grib/FNMOC/WW3/Global_1p0deg/Best``
+            - ``https://github.com/pydata/xarray-data/blob/master/air_temperature.nc?raw=true``
+            - ``{{ CATALOG_DIR }}/data/{site_id}_data.nc``
+    xarray_kwargs : dict, optional
+        Any further arguments to pass to ``xr.open_dataset``.
     """
     name = 'netcdf'
+    __doc__ += XarraySource.__inheritted_parameters_doc__
 
-    def __init__(self, urlpath, chunks, xarray_kwargs=None, metadata=None,
-                 **kwargs):
-        self.urlpath = urlpath
-        self.chunks = chunks
-        self._kwargs = xarray_kwargs or kwargs
-        self._ds = None
-        super(NetCDFSource, self).__init__(metadata=metadata)
-
-    def _open_dataset(self):
-        url = self.urlpath
-        _open_dataset = xr.open_mfdataset if "*" in url else xr.open_dataset
-
-        self._ds = _open_dataset(url, chunks=self.chunks, **self._kwargs)
+    def __init__(self, urlpath, chunks=None, reader=None, multireader=None, **kwargs):
+        super(NetCDFSource, self).__init__(urlpath, chunks, **kwargs)
+        self.reader = reader or xr.open_dataset
+        self.multireader = multireader or xr.open_mfdataset

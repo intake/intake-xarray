@@ -1,43 +1,46 @@
 # -*- coding: utf-8 -*-
 import xarray as xr
-from .base import DataSourceMixin
+from .base import XarraySource
 
 import os
 
 
-class OpenDapSource(DataSourceMixin):
-    """Open a OPeNDAP source.
+def _get_session(filename):
+    from pydap.cas.esgf import setup_session
+    username = os.getenv('DAP_USER', None)
+    password = os.getenv('DAP_PASSWORD', None)
+    return setup_session(
+        username,
+        password,
+        check_url=filename)
+
+
+class OpenDapSource(XarraySource):
+    """Open an authenticated OPeNDAP source.
+
+    NOTE: For an un-authenticated OPeNDAP source use 'netcdf' instead.
 
     Parameters
     ----------
-    urlpath: str
+    urlpath : str
         Path to source file.
-    chunks: int or dict
-        Chunks is used to load the new dataset into dask
-        arrays. ``chunks={}`` loads the dataset with dask using a single
-        chunk for all arrays.
+    xarray_kwargs : dict, optional
+        Any further arguments to pass to ``xr.open_dataset``.
     """
     name = 'opendap'
+    __doc__ += XarraySource.__inheritted_parameters_doc__
 
-    def __init__(self, urlpath, chunks, xarray_kwargs=None, metadata=None,
-                 **kwargs):
-        self.urlpath = urlpath
-        self.chunks = chunks
-        self._kwargs = xarray_kwargs or kwargs
-        self._ds = None
-        super(OpenDapSource, self).__init__(metadata=metadata)
+    def __init__(self, urlpath, chunks=None, **kwargs):
+        super(OpenDapSource, self).__init__(urlpath, chunks, **kwargs)
 
-    def _get_session(self):
-        from pydap.cas.esgf import setup_session
-        username = os.getenv('DAP_USER', None)
-        password = os.getenv('DAP_PASSWORD', None)
-        return setup_session(
-            username,
-            password,
-            check_url=self.urlpath)
+    def reader(self, filename, **kwargs):
+        session = _get_session(filename)
 
-    def _open_dataset(self):
-        session = self._get_session()
+        store = xr.backends.PydapDataStore.open(filename, session=session)
+        return xr.open_dataset(store, **kwargs)
 
-        store = xr.backends.PydapDataStore.open(self.urlpath, session=session)
-        self._ds = xr.open_dataset(store, chunks=self.chunks, **self._kwargs)
+    def multireader(self, filename, **kwargs):
+        session = _get_session(filename)
+
+        store = xr.backends.PydapDataStore.open(filename, session=session)
+        return xr.open_mfdataset(store, **kwargs)

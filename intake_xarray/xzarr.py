@@ -1,40 +1,35 @@
 import xarray as xr
 from dask.bytes.core import get_fs, infer_options, update_storage_options
-from .base import DataSourceMixin
+from .base import XarraySource
 
 
-class ZarrSource(DataSourceMixin):
-    """Open a xarray dataset.
+class ZarrSource(XarraySource):
+    """Open a zarr file as an xarray dataset.
 
     Parameters
     ----------
     urlpath: str
         Path to source. This can be a local directory or a remote data
         service (i.e., with a protocol specifier like ``'s3://``).
-    storage_options: dict
-        Parameters passed to the backend file-system
-    kwargs:
-        Further parameters are passed to xr.open_zarr
+    xarray_kwargs:
+        Further parameters are passed to ``xr.open_zarr``
     """
     name = 'zarr'
+    __doc__ += XarraySource.__inheritted_parameters_doc__
 
-    def __init__(self, urlpath, storage_options=None, metadata=None, **kwargs):
-        super(ZarrSource, self).__init__(metadata=metadata)
-        self.urlpath = urlpath
-        self.storage_options = storage_options
-        self.kwargs = kwargs
-        self._ds = None
+    def __init__(self, urlpath, chunks=None, **kwargs):
+        super(ZarrSource, self).__init__(urlpath, chunks, **kwargs)
 
-    def _open_dataset(self):
+    def reader(self, filename, chunks=None, **kwargs):
         urlpath, protocol, options = infer_options(self.urlpath)
         update_storage_options(options, self.storage_options)
 
         self._fs, _ = get_fs(protocol, options)
         if protocol != 'file':
             self._mapper = get_mapper(protocol, self._fs, urlpath)
-            self._ds = xr.open_zarr(self._mapper, **self.kwargs)
+            return xr.open_zarr(self._mapper, **kwargs)
         else:
-            self._ds = xr.open_zarr(self.urlpath, **self.kwargs)
+            return xr.open_zarr(self.urlpath, **kwargs)
 
     def close(self):
         super(ZarrSource, self).close()

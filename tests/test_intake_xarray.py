@@ -16,7 +16,7 @@ def test_discover(source, cdf_source, zarr_source, dataset):
     r = source.discover()
 
     assert r['datashape'] is None
-    assert r['dtype'] is None
+    assert r['dtype'] == 'float32'
     assert r['metadata'] is not None
 
     assert source.datashape is None
@@ -218,3 +218,59 @@ def test_read_pattern_path_as_pattern_as_str_with_list_of_urlpaths():
     for color, values in rgb.items():
         for i, v in enumerate(values):
             assert (da.sel(color=color).sel(band=i+1).values == v).all()
+
+def test_read_image():
+    im = intake.open_image(os.path.join(here, 'data', 'little_red.tif'))
+    da = im.read()
+    assert da.shape == (64, 64, 3)
+
+def test_read_images():
+    im = intake.open_image(os.path.join(here, 'data', 'little_*.tif'))
+    da = im.read()
+    assert da.shape == (2, 64, 64, 3)
+    assert da.dims == ('concat_dim', 'y', 'x', 'band')
+
+def test_read_images_with_pattern():
+    path = os.path.join(here, 'data', 'little_{color}.tif')
+    im = intake.open_image(path, concat_dim='color')
+    da = im.read()
+    assert da.shape == (2, 64, 64, 3)
+    assert len(da.color) == 2
+    assert set(da.color.data) == set(['red', 'green'])
+
+def test_read_images_with_merge_dim():
+    path = os.path.join(here, 'data', 'little_*.tif')
+    im = intake.open_image(path, merge_dim='color')
+    ds = im.read()
+    assert set(ds.data_vars) == set(['color_0', 'color_1'])
+    assert ds.color_0.shape == (64, 64, 3)
+
+def test_read_images_with_merge_dim_with_pattern():
+    path = os.path.join(here, 'data', 'little_{color}.tif')
+    im = intake.open_image(path, merge_dim='color')
+    ds = im.read()
+    assert set(ds.data_vars) == set(['red', 'green'])
+    assert ds.red.shape == (64, 64, 3)
+
+
+def test_read_grib_with_merge_dim():
+    pytest.importorskip('Nio')
+    path = os.path.join(here, 'data', 'wafsgfs_L_t06z_intdsk*.grib2')
+    grib = intake.open_netcdf(path, merge_dim=True, engine='pynio')
+    ds = grib.read()
+    assert len(ds.data_vars) == 29
+
+def test_read_grib_with_pattern():
+    pytest.importorskip('Nio')
+    path = os.path.join(here, 'data', 'wafsgfs_L_t06z_intdsk{num}.grib2')
+    grib = intake.open_netcdf(path, concat_dim='num', engine='pynio')
+    ds = grib.read()
+    assert 'num' in list(ds.coords)
+    assert len(ds.data_vars) == 29
+
+def test_read_grib():
+    pytest.importorskip('Nio')
+    path = os.path.join(here, 'data', 'wafsgfs_L_t06z_intdsk61.grib2')
+    grib = intake.open_netcdf(path, engine='pynio')
+    ds = grib.read()
+    assert len(ds.data_vars) == 29
