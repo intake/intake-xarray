@@ -220,17 +220,20 @@ def test_read_pattern_path_as_pattern_as_str_with_list_of_urlpaths():
             assert (da.sel(color=color).sel(band=i+1).values == v).all()
 
 def test_read_image():
+    pytest.importorskip('skimage')
     im = intake.open_image(os.path.join(here, 'data', 'little_red.tif'))
     da = im.read()
     assert da.shape == (64, 64, 3)
 
 def test_read_images():
+    pytest.importorskip('skimage')
     im = intake.open_image(os.path.join(here, 'data', 'little_*.tif'))
     da = im.read()
     assert da.shape == (2, 64, 64, 3)
     assert da.dims == ('concat_dim', 'y', 'x', 'band')
 
 def test_read_images_with_pattern():
+    pytest.importorskip('skimage')
     path = os.path.join(here, 'data', 'little_{color}.tif')
     im = intake.open_image(path, concat_dim='color')
     da = im.read()
@@ -239,6 +242,7 @@ def test_read_images_with_pattern():
     assert set(da.color.data) == set(['red', 'green'])
 
 def test_read_images_with_merge_dim():
+    pytest.importorskip('skimage')
     path = os.path.join(here, 'data', 'little_*.tif')
     im = intake.open_image(path, merge_dim='color')
     ds = im.read()
@@ -246,6 +250,7 @@ def test_read_images_with_merge_dim():
     assert ds.color_0.shape == (64, 64, 3)
 
 def test_read_images_with_merge_dim_with_pattern():
+    pytest.importorskip('skimage')
     path = os.path.join(here, 'data', 'little_{color}.tif')
     im = intake.open_image(path, merge_dim='color')
     ds = im.read()
