@@ -22,6 +22,6 @@ conda install -c intake intake-xarray
 To install optional dependencies:
 
 ```
-pip intall rasterio
+pip install rasterio
 conda install -c conda-forge zarr
 ```
