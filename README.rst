@@ -1,3 +1,3 @@
-Intake-netcdf: NetCDF Plugin for Intake
------------------------------------------------------
+intake-xarray: XArray Plugin for Intake
+---------------------------------------
 
