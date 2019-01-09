@@ -42,7 +42,7 @@ sources:
   image:
     description: Labeled images from UCMerced_LandUse/Images
     origin: http://weegee.vision.ucmerced.edu/datasets/landuse.html
-    driver: image
+    driver: xarray_image
     cache:
       - argkey: urlpath
         regex: 'earth-data/UCMerced_LandUse'
@@ -63,7 +63,7 @@ sources:
   images_labelled:
     description: All the labeled images from UCMerced_LandUse/Images for one id
     origin: http://weegee.vision.ucmerced.edu/datasets/landuse.html
-    driver: image
+    driver: xarray_image
     cache:
       - argkey: urlpath
         regex: 'earth-data/UCMerced_LandUse'
@@ -83,7 +83,7 @@ sources:
   images_unlabelled:
     description: All the labeled images from UCMerced_LandUse/Images for one id
     origin: http://weegee.vision.ucmerced.edu/datasets/landuse.html
-    driver: image
+    driver: xarray_image
     cache:
       - argkey: urlpath
         regex: 'earth-data/UCMerced_LandUse'
