@@ -2,11 +2,11 @@
 import xarray as xr
 from .base import XarraySource
 
-import os
-
 
 def _get_session(filename):
+    import os
     from pydap.cas.esgf import setup_session
+
     username = os.getenv('DAP_USER', None)
     password = os.getenv('DAP_PASSWORD', None)
     return setup_session(

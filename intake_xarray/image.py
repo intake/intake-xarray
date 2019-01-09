@@ -1,19 +1,4 @@
-from __future__ import absolute_import, division, print_function
-
-from glob import glob
-import os
-
-try:
-    from skimage.io import imread as sk_imread
-except (AttributeError, ImportError):
-    pass
-
-from dask.array import Array
-from dask.base import tokenize
-
-import numpy as np
 import xarray as xr
-
 from .base import XarraySource
 
 
@@ -46,6 +31,17 @@ def dask_imread(filename, imread=None, preprocess=None):
     Dask array of all images stacked along the first dimension.  All images
     will be treated as individual chunks
     """
+    import os
+    from glob import glob
+
+    try:
+        from skimage.io import imread as sk_imread
+    except (AttributeError, ImportError):
+        pass
+
+    from dask.array import Array
+    from dask.base import tokenize
+
     imread = imread or sk_imread
     name = None
 
@@ -110,34 +106,42 @@ class ImageSource(XarraySource):
         Any further arguments to pass to reader function. Of particular
         interest is the ``imread`` option.
     """
-    name = 'image'
+    name = 'xarray_image'
     __doc__ += XarraySource.__inheritted_parameters_doc__
 
     def __init__(self, urlpath, chunks=None, **kwargs):
         super(ImageSource, self).__init__(urlpath, chunks, **kwargs)
 
     def reader(self, filename, chunks, **kwargs):
+        import numpy as np
+
         dask_array = dask_imread(filename, **kwargs)[0]
 
         ny, nx = dask_array.shape[:2]
         coords = {'y': np.arange(ny),
                   'x': np.arange(nx)}
         dims = ('y', 'x')
+
         if len(dask_array.shape) == 3:
             nband = dask_array.shape[2]
             coords['band'] = np.arange(nband)
             dims += ('band',)
+
         return xr.DataArray(dask_array, coords=coords, dims=dims).chunk(chunks=chunks)
 
     def multireader(self, filename, chunks, concat_dim, **kwargs):
+        import numpy as np
+
         dask_array = dask_imread(filename, **kwargs)
 
         ny, nx = dask_array.shape[1:3]
         coords = {'y': np.arange(ny),
                   'x': np.arange(nx)}
         dims = (concat_dim, 'y', 'x')
+
         if len(dask_array.shape) == 4:
             nband = dask_array.shape[3]
             coords['band'] = np.arange(nband)
             dims += ('band',)
+
         return xr.DataArray(dask_array, coords=coords, dims=dims).chunk(chunks=chunks)

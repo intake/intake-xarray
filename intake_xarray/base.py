@@ -2,9 +2,6 @@ from . import __version__
 from intake.source.base import DataSource, Schema, PatternMixin
 from intake.source.utils import reverse_formats
 
-import glob
-import numpy as np
-
 try:
     import xarray as xr
 except (AttributeError, ImportError):
@@ -25,12 +22,12 @@ class XarraySource(DataSource, PatternMixin):
         from cache.
 
         Some examples:
-            - ``{{ CATALOG_DIR }}data/RGB.tif``
+            - ``{{ CATALOG_DIR }}data/RGB.nc``
             - ``s3://data/*.nc``
             - ``http://thredds.ucar.edu/thredds/dodsC/grib/FNMOC/WW3/Global_1p0deg/Best``
             - ``https://github.com/pydata/xarray-data/blob/master/air_temperature.nc?raw=true``
-            - ``./data/landsat8_{collection_date:%Y%m%d}_band{band}.tif``
-            - ``s3://data/Images/{{ landuse }}/{{ landuse }}{{ '%02d' % id }}.tif``
+            - ``./data/landsat8_{collection_date:%Y%m%d}_band{band}.nc``
+            - ``s3://data/Images/{{ landuse }}/{{ landuse }}{{ '%02d' % id }}.nc``
     reader : function, optional
         Reader function which takes filename, chunks and any kwargs in
         ``xarray_kwargs``; returns an xarray object. Default is
@@ -103,15 +100,17 @@ class XarraySource(DataSource, PatternMixin):
     def multireader(self, filename, chunks, **kwargs):
         if getattr(self, '_multireader', None) is not None:
             return self._multireader(filename, chunks, **kwargs)
-        raise NotImplementedError('Plugin must implement a multireader function '
-                                  'or set this to None. The function takes a glob '
-                                  'representing filenames, chunks, and arbitrary '
-                                  'kwargs and returns an xarray object')
+        raise NotImplementedError('Plugin must implement a multireader '
+                                  'function or set this to None. The function '
+                                  'takes a glob representing filenames, '
+                                  'chunks, and arbitrary kwargs and returns '
+                                  'an xarray object')
 
     def _get_coords(self, das, field_values, index=None):
         """ Given a list of dask xarray objects and a dict of arrays of coords
             return a dict of coords that should be set on the concatenated data
         """
+        import numpy as np
         return {
             k: xr.concat(
                 [xr.DataArray(
@@ -169,14 +168,17 @@ class XarraySource(DataSource, PatternMixin):
         return xr.merge(merge_das)
 
     def _open_dataset(self):
+        from glob import glob
+
         is_glob = '*' in self.urlpath
         is_list = isinstance(self.urlpath, list)
 
+        # if the path doesn't need pattern reading and is multi - use multireader
         if self.multireader and not (self.pattern or self.merge_dim) and is_glob:
             self._ds = self.multireader(self.urlpath, chunks=self.chunks,
                                         concat_dim=self.concat_dim, **self.kwargs)
         elif is_glob:
-            files = sorted(glob.glob(self.urlpath))
+            files = sorted(glob(self.urlpath))
             if len(files) == 0:
                 raise Exception("No files found at {}".format(self.urlpath))
             self._ds = self._open_files(files)
