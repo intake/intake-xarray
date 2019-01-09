@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import xarray as xr
 from .base import XarraySource
 
 
@@ -34,12 +33,16 @@ class OpenDapSource(XarraySource):
         super(OpenDapSource, self).__init__(urlpath, chunks, **kwargs)
 
     def reader(self, filename, **kwargs):
+        import xarray as xr
+
         session = _get_session(filename)
 
         store = xr.backends.PydapDataStore.open(filename, session=session)
         return xr.open_dataset(store, **kwargs)
 
     def multireader(self, filename, **kwargs):
+        import xarray as xr
+
         session = _get_session(filename)
 
         store = xr.backends.PydapDataStore.open(filename, session=session)

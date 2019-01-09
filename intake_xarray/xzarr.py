@@ -1,4 +1,3 @@
-import xarray as xr
 from dask.bytes.core import get_fs, infer_options, update_storage_options
 from .base import XarraySource
 
@@ -21,15 +20,16 @@ class ZarrSource(XarraySource):
         super(ZarrSource, self).__init__(urlpath, chunks, **kwargs)
 
     def reader(self, filename, chunks=None, **kwargs):
+        from xarray import open_zarr
         urlpath, protocol, options = infer_options(self.urlpath)
         update_storage_options(options, self.storage_options)
 
         self._fs, _ = get_fs(protocol, options)
         if protocol != 'file':
             self._mapper = get_mapper(protocol, self._fs, urlpath)
-            return xr.open_zarr(self._mapper, **kwargs)
+            return open_zarr(self._mapper, **kwargs)
         else:
-            return xr.open_zarr(self.urlpath, **kwargs)
+            return open_zarr(self.urlpath, **kwargs)
 
     def close(self):
         super(ZarrSource, self).close()

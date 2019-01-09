@@ -122,24 +122,38 @@ class XarraySource(DataSource, PatternMixin):
         }
 
     def _open_files(self, files):
+        """
+        Open files and concat/merge into one dataarray/dataset,
+        parsing coords if path-as-pattern.
+
+        NOTE: If ``merge_dim`` is set then ``concat_dim`` is ignored. The only
+        exception to that is if path_as_pattern is used and both ``merge_dim``
+        and ``concat_dim`` are fields in the pattern. In which case the files
+        will be both merged and concatenated according to filename.
+        """
         das = [self.reader(f, chunks=self.chunks, **self.kwargs)
                for f in files]
         if not self.pattern:
-            if self.merge_dim:
+            if not self.merge_dim:
+                # if no pattern and concat_dim, concatenate dataarrays
+                return xr.concat(das, dim=self.concat_dim)
+            else:
+                # if no pattern and merge_dim, create data vars with generic names
                 for i, da in enumerate(das):
                     if isinstance(da, xr.DataArray):
                         da.name = '{dim}_{i}'.format(dim=self.merge_dim, i=i)
                 return xr.merge(das)
-            if self.concat_dim:
-                return xr.concat(das, dim=self.concat_dim)
 
         field_values = reverse_formats(self.pattern, files)
 
         if not self.merge_dim:
+            # if pattern and merge_dim is not set, get coords and concatenate dataarrays
             coords = self._get_coords(das, field_values)
             out = xr.concat(das, dim=self.concat_dim)
             return out.assign_coords(**coords).chunk(self.chunks)
 
+        # if pattern and merge_dim is set, get fields from filename and use
+        # as data var names in a new dataset
         data_vars = set(field_values.get(self.merge_dim, []))
         if len(data_vars) == 0:
             data_vars = ['{}_{}'.format(self.merge_dim, i) for i in range(len(das))]
@@ -192,9 +206,12 @@ class XarraySource(DataSource, PatternMixin):
         """Make schema object, which embeds xarray object and some details"""
         from .xarray_container import serialize_zarr_ds
 
+        # urlpath which are globs or a lists are multi-file
         is_multi = '*' in self.urlpath or isinstance(self.urlpath, list)
+
         self.urlpath = self._get_cache(self.urlpath)[0]
         if isinstance(self.urlpath, list) and not is_multi:
+            assert len(self.urlpath) == 1
             self.urlpath = self.urlpath[0]
 
         if self._ds is None:
@@ -205,6 +222,7 @@ class XarraySource(DataSource, PatternMixin):
                 ds = xr.Dataset({'value': da})
                 extra_metadata = {'array': 'value'}
             else:
+                # if not a DataArray, it must be a Dataset
                 ds = self._ds
                 da = ds[list(ds.data_vars)[0]]
                 extra_metadata = {}

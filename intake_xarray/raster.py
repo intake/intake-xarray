@@ -1,4 +1,3 @@
-import xarray as xr
 from .base import XarraySource
 
 
@@ -31,6 +30,8 @@ class RasterIOSource(XarraySource):
     __doc__ += XarraySource.__inheritted_parameters_doc__
 
     def __init__(self, urlpath, chunks=None, **kwargs):
+        from xarray import open_rasterio
+
         super(RasterIOSource, self).__init__(urlpath, chunks, **kwargs)
-        self.reader = xr.open_rasterio
+        self.reader = open_rasterio
         self.multireader = None

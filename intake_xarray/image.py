@@ -1,4 +1,3 @@
-import xarray as xr
 from .base import XarraySource
 
 
@@ -8,24 +7,25 @@ def add_leading_dimension(x):
 
 def dask_imread(filename, imread=None, preprocess=None):
     """ Read a stack of images into a dask array
+
+    NOTE: This is copied from dask with an addition of filename info
+
     Parameters
     ----------
-    filename: string, iter
+    filename : string, iter
         A globstring like 'myfile.*.png', a list of files, or anything
         that can go into imread.
-    imread: function (optional)
-        Optionally provide custom imread function.
-        Function should expect a filename and produce a numpy array.
-        Defaults to ``skimage.io.imread``.
-    preprocess: function (optional)
+    preprocess : function (optional)
         Optionally provide custom function to preprocess the image.
         Function should expect a numpy array for a single image.
+
     Examples
     --------
     >>> from dask.array.image import imread
     >>> im = imread('2015-*-*.png')  # doctest: +SKIP
     >>> im.shape  # doctest: +SKIP
     (365, 1000, 1000, 3)
+
     Returns
     -------
     Dask array of all images stacked along the first dimension.  All images
@@ -34,15 +34,11 @@ def dask_imread(filename, imread=None, preprocess=None):
     import os
     from glob import glob
 
-    try:
-        from skimage.io import imread as sk_imread
-    except (AttributeError, ImportError):
-        pass
+    from skimage.io import imread
 
     from dask.array import Array
     from dask.base import tokenize
 
-    imread = imread or sk_imread
     name = None
 
     if isinstance(filename, list):
@@ -52,6 +48,7 @@ def dask_imread(filename, imread=None, preprocess=None):
     elif os.path.isfile(filename):
         filenames = [filename]
     else:
+        # file is remote
         filenames = [filename]
         name = 'imread-%s' % tokenize(filenames)
 
@@ -114,6 +111,7 @@ class ImageSource(XarraySource):
 
     def reader(self, filename, chunks, **kwargs):
         import numpy as np
+        from xarray import DataArray
 
         dask_array = dask_imread(filename, **kwargs)[0]
 
@@ -127,10 +125,11 @@ class ImageSource(XarraySource):
             coords['band'] = np.arange(nband)
             dims += ('band',)
 
-        return xr.DataArray(dask_array, coords=coords, dims=dims).chunk(chunks=chunks)
+        return DataArray(dask_array, coords=coords, dims=dims).chunk(chunks=chunks)
 
     def multireader(self, filename, chunks, concat_dim, **kwargs):
         import numpy as np
+        from xarray import DataArray
 
         dask_array = dask_imread(filename, **kwargs)
 
@@ -144,4 +143,4 @@ class ImageSource(XarraySource):
             coords['band'] = np.arange(nband)
             dims += ('band',)
 
-        return xr.DataArray(dask_array, coords=coords, dims=dims).chunk(chunks=chunks)
+        return DataArray(dask_array, coords=coords, dims=dims).chunk(chunks=chunks)
