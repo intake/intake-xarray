@@ -86,25 +86,9 @@ class XarraySource(DataSource, PatternMixin):
         self.kwargs = xarray_kwargs or kwargs
         self._ds = None
         self.storage_options = storage_options
-        self._reader = reader or xr.open_dataset
-        self._multireader = multireader or xr.open_mfdataset
+        self.reader = reader or xr.open_dataset
+        self.multireader = multireader or xr.open_mfdataset
         super(XarraySource, self).__init__(metadata=metadata)
-
-    def reader(self, filename, chunks, **kwargs):
-        if getattr(self, '_reader', None) is not None:
-            return self._reader(filename, chunks, **kwargs)
-        raise NotImplementedError('Plugin must implement a reader function '
-                                  'which takes at least filename, and chunks '
-                                  'and returns an xarray object')
-
-    def multireader(self, filename, chunks, **kwargs):
-        if getattr(self, '_multireader', None) is not None:
-            return self._multireader(filename, chunks, **kwargs)
-        raise NotImplementedError('Plugin must implement a multireader '
-                                  'function or set this to None. The function '
-                                  'takes a glob representing filenames, '
-                                  'chunks, and arbitrary kwargs and returns '
-                                  'an xarray object')
 
     def _get_coords(self, das, field_values, index=None):
         """ Given a list of dask xarray objects and a dict of arrays of coords
@@ -182,7 +166,7 @@ class XarraySource(DataSource, PatternMixin):
         return xr.merge(merge_das)
 
     def _open_dataset(self):
-        from glob import glob
+        from dask.bytes import open_files
 
         is_glob = '*' in self.urlpath
         is_list = isinstance(self.urlpath, list)
@@ -192,7 +176,7 @@ class XarraySource(DataSource, PatternMixin):
             self._ds = self.multireader(self.urlpath, chunks=self.chunks,
                                         concat_dim=self.concat_dim, **self.kwargs)
         elif is_glob:
-            files = sorted(glob(self.urlpath))
+            files = [f.path for f in open_files(self.urlpath)]
             if len(files) == 0:
                 raise Exception("No files found at {}".format(self.urlpath))
             self._ds = self._open_files(files)

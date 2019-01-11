@@ -14,6 +14,25 @@ def _get_session(filename):
         check_url=filename)
 
 
+def _get_store(filename):
+    from xarray.backends import PydapDataStore
+
+    session = _get_session(filename)
+    return PydapDataStore.open(filename, session=session)
+
+
+def reader(filename, **kwargs):
+    from xarray import open_dataset
+
+    return open_dataset(_get_store(filename), **kwargs)
+
+
+def multireader(filename, **kwargs):
+    from xarray import open_mfdataset
+
+    return open_mfdataset(_get_store(filename), **kwargs)
+
+
 class OpenDapSource(XarraySource):
     """Open an authenticated OPeNDAP source.
 
@@ -31,19 +50,5 @@ class OpenDapSource(XarraySource):
 
     def __init__(self, urlpath, chunks=None, **kwargs):
         super(OpenDapSource, self).__init__(urlpath, chunks, **kwargs)
-
-    def reader(self, filename, **kwargs):
-        import xarray as xr
-
-        session = _get_session(filename)
-
-        store = xr.backends.PydapDataStore.open(filename, session=session)
-        return xr.open_dataset(store, **kwargs)
-
-    def multireader(self, filename, **kwargs):
-        import xarray as xr
-
-        session = _get_session(filename)
-
-        store = xr.backends.PydapDataStore.open(filename, session=session)
-        return xr.open_mfdataset(store, **kwargs)
+        self.reader = reader
+        self.multireader = multireader

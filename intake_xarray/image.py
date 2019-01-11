@@ -55,7 +55,8 @@ def dask_imread(filename, imread=None, preprocess=None):
     if not filenames:
         raise ValueError("No files found under name %s" % filename)
 
-    name = name or 'imread-%s' % tokenize(filenames, map(os.path.getmtime, filenames))
+    name = name or 'imread-%s' % tokenize(filenames,
+                                          map(os.path.getmtime, filenames))
 
     sample = imread(filenames[0])
     if preprocess:
@@ -73,6 +74,44 @@ def dask_imread(filename, imread=None, preprocess=None):
     chunks = ((1, ) * len(filenames), ) + tuple((d, ) for d in sample.shape)
 
     return Array(dsk, name, chunks, sample.dtype)
+
+
+def reader(filename, chunks, **kwargs):
+    import numpy as np
+    from xarray import DataArray
+
+    dask_array = dask_imread(filename, **kwargs)[0]
+
+    ny, nx = dask_array.shape[:2]
+    coords = {'y': np.arange(ny),
+              'x': np.arange(nx)}
+    dims = ('y', 'x')
+
+    if len(dask_array.shape) == 3:
+        nband = dask_array.shape[2]
+        coords['band'] = np.arange(nband)
+        dims += ('band',)
+
+    return DataArray(dask_array, coords=coords, dims=dims).chunk(chunks=chunks)
+
+
+def multireader(filename, chunks, concat_dim, **kwargs):
+    import numpy as np
+    from xarray import DataArray
+
+    dask_array = dask_imread(filename, **kwargs)
+
+    ny, nx = dask_array.shape[1:3]
+    coords = {'y': np.arange(ny),
+              'x': np.arange(nx)}
+    dims = (concat_dim, 'y', 'x')
+
+    if len(dask_array.shape) == 4:
+        nband = dask_array.shape[3]
+        coords['band'] = np.arange(nband)
+        dims += ('band',)
+
+    return DataArray(dask_array, coords=coords, dims=dims).chunk(chunks=chunks)
 
 
 class ImageSource(XarraySource):
@@ -100,47 +139,12 @@ class ImageSource(XarraySource):
             - ``https://example.com/image.png`
             - ``s3://data/Images/{{ landuse }}/{{ landuse }}{{ '%02d' % id }}.tif``
     xarray_kwargs : dict, optional
-        Any further arguments to pass to reader function. Of particular
-        interest is the ``imread`` option.
+        Any further arguments to pass to reader function.
     """
     name = 'xarray_image'
     __doc__ += XarraySource.__inheritted_parameters_doc__
 
     def __init__(self, urlpath, chunks=None, **kwargs):
         super(ImageSource, self).__init__(urlpath, chunks, **kwargs)
-
-    def reader(self, filename, chunks, **kwargs):
-        import numpy as np
-        from xarray import DataArray
-
-        dask_array = dask_imread(filename, **kwargs)[0]
-
-        ny, nx = dask_array.shape[:2]
-        coords = {'y': np.arange(ny),
-                  'x': np.arange(nx)}
-        dims = ('y', 'x')
-
-        if len(dask_array.shape) == 3:
-            nband = dask_array.shape[2]
-            coords['band'] = np.arange(nband)
-            dims += ('band',)
-
-        return DataArray(dask_array, coords=coords, dims=dims).chunk(chunks=chunks)
-
-    def multireader(self, filename, chunks, concat_dim, **kwargs):
-        import numpy as np
-        from xarray import DataArray
-
-        dask_array = dask_imread(filename, **kwargs)
-
-        ny, nx = dask_array.shape[1:3]
-        coords = {'y': np.arange(ny),
-                  'x': np.arange(nx)}
-        dims = (concat_dim, 'y', 'x')
-
-        if len(dask_array.shape) == 4:
-            nband = dask_array.shape[3]
-            coords['band'] = np.arange(nband)
-            dims += ('band',)
-
-        return DataArray(dask_array, coords=coords, dims=dims).chunk(chunks=chunks)
+        self.reader = reader
+        self.multireader = multireader

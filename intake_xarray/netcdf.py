@@ -33,9 +33,9 @@ class NetCDFSource(XarraySource):
     name = 'netcdf'
     __doc__ += XarraySource.__inheritted_parameters_doc__
 
-    def __init__(self, urlpath, chunks=None, reader=None, multireader=None, **kwargs):
+    def __init__(self, urlpath, chunks=None, **kwargs):
         from xarray import open_dataset, open_mfdataset
 
         super(NetCDFSource, self).__init__(urlpath, chunks, **kwargs)
-        self.reader = reader or open_dataset
-        self.multireader = multireader or open_mfdataset
+        self.reader = open_dataset
+        self.multireader = open_mfdataset
