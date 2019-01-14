@@ -155,6 +155,17 @@ class ImageSource(DataSourceMixin, PatternMixin):
             - ``s3://data/*.jpeg``
             - ``https://example.com/image.png`
             - ``s3://data/Images/{{ landuse }}/{{ landuse }}{{ '%02d' % id }}.tif``
+    chunks: int or dict
+        Chunks is used to load the new dataset into dask
+        arrays. ``chunks={}`` loads the dataset with dask using a single
+        chunk for all arrays.
+    path_as_pattern: bool or str, optional
+        Whether to treat the path as a pattern (ie. ``data_{field}.tif``)
+        and create new coodinates in the output corresponding to pattern
+        fields. If str, is treated as pattern to match on. Default is True.
+    concat_dim : str or iterable
+        Dimension over which to concatenate. If iterable, all fields must be
+        part of the the pattern.
     xarray_kwargs : dict, optional
         Any further arguments to pass to reader function.
     """
