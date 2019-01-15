@@ -4,63 +4,24 @@ from intake.source.utils import reverse_formats
 from .base import DataSourceMixin, Schema
 
 
-def add_leading_dimension(x):
-    return x[None, ...]
-
-
-def get_mtime(filename):
-    import os
-    from datetime import datetime
-
-    if os.path.isfile(filename):
-        return os.path.getmtime(filename)
-    return datetime.utcnow().timestamp()
-
-
-def dask_imread(files, imread=None, preprocess=None):
-    """ Read a stack of images into a dask array
-
-    NOTE: copied from dask.array.image.imread but altering the input to accept
-    a list of file objects
-
-    Parameters
-    ----------
-    files : iter
-        List of file objects
-    imread : function (optional)
-        Optionally provide custom imread function.
-        Function should expect a filename and produce a numpy array.
-        Defaults to ``skimage.io.imread``.
-    preprocess : function (optional)
-        Optionally provide custom function to preprocess the image.
-        Function should expect a numpy array for a single image.
-
-    Examples
-    --------
-    >>> from dask.array.image import imread
-    >>> im = imread('2015-*-*.png')  # doctest: +SKIP
-    >>> im.shape  # doctest: +SKIP
-    (365, 1000, 1000, 3)
-
-    Returns
-    -------
-    Dask array of all images stacked along the first dimension.  All images
-    will be treated as individual chunks
-    """
+def _dask_imread(files, imread=None, preprocess=None):
+    """ Read a stack of images into a dask array """
     from dask.array import Array
     from dask.base import tokenize
-    from dask.bytes.core import OpenFile
 
     if not imread:
         from skimage.io import imread
 
-    def _imread(open_file: OpenFile):
+    def _imread(open_file):
         with open_file as f:
             return imread(f)
 
+    def add_leading_dimension(x):
+        return x[None, ...]
+
     filenames = [f.path for f in files]
 
-    name = 'imread-%s' % tokenize(filenames, map(get_mtime, filenames))
+    name = 'imread-%s' % tokenize(filenames)
 
     with files[0] as f:
         sample = imread(f)
@@ -84,7 +45,31 @@ def dask_imread(files, imread=None, preprocess=None):
 
 
 def reader(file, chunks, imread=None, preprocess=None, **kwargs):
-    """ Read a file object and output an xarray object
+    """Read a file object and output an dask xarray object
+
+    NOTE: inspired by dask.array.image.imread but altering the input to accept
+    a just one file object.
+
+    Parameters
+    ----------
+    file : OpenFile
+        File object
+    chunks : int or dict
+        Chunks is used to load the new dataset into dask
+        arrays. ``chunks={}`` loads the dataset with dask using a single
+        chunk for all arrays.
+    imread : function (optional)
+        Optionally provide custom imread function.
+        Function should expect a filename and produce a numpy array.
+        Defaults to ``skimage.io.imread``.
+    preprocess : function (optional)
+        Optionally provide custom function to preprocess the image.
+        Function should expect a numpy array for a single image.
+
+    Returns
+    -------
+    Dask xarray.DataArray of all the image. Treated as one chunk unless
+    chunks kwarg is specified.
     """
     import numpy as np
     from xarray import DataArray
@@ -103,18 +88,48 @@ def reader(file, chunks, imread=None, preprocess=None, **kwargs):
     dims = ('y', 'x')
 
     if len(array.shape) == 3:
-        nband = array.shape[2]
-        coords['band'] = np.arange(nband)
-        dims += ('band',)
+        nchannel = array.shape[2]
+        coords['channel'] = np.arange(nchannel)
+        dims += ('channel',)
 
     return DataArray(array, coords=coords, dims=dims).chunk(chunks=chunks)
 
 
 def multireader(files, chunks, concat_dim, **kwargs):
+    """Read a stack of images into a dask xarray object
+
+    NOTE: copied from dask.array.image.imread but altering the input to accept
+    a list of file objects.
+
+    Parameters
+    ----------
+    files : iter
+        List of file objects
+    chunks : int or dict
+        Chunks is used to load the new dataset into dask
+        arrays. ``chunks={}`` loads the dataset with dask using a single
+        chunk for all arrays.
+    concat_dim : str or iterable
+        Dimension over which to concatenate. If iterable, all fields must be
+        part of the the pattern.
+    imread : function (optional)
+        Optionally provide custom imread function.
+        Function should expect a filename and produce a numpy array.
+        Defaults to ``skimage.io.imread``.
+    preprocess : function (optional)
+        Optionally provide custom function to preprocess the image.
+        Function should expect a numpy array for a single image.
+
+    Returns
+    -------
+    Dask xarray.DataArray of all images stacked along the first dimension.
+    All images will be treated as individual chunks unless
+    chunks kwarg is specified.
+    """
     import numpy as np
     from xarray import DataArray
 
-    dask_array = dask_imread(files, **kwargs)
+    dask_array = _dask_imread(files, **kwargs)
 
     ny, nx = dask_array.shape[1:3]
     coords = {'y': np.arange(ny),
@@ -125,9 +140,9 @@ def multireader(files, chunks, concat_dim, **kwargs):
         dims = (concat_dim, 'y', 'x')
 
     if len(dask_array.shape) == 4:
-        nband = dask_array.shape[3]
-        coords['band'] = np.arange(nband)
-        dims += ('band',)
+        nchannel = dask_array.shape[3]
+        coords['channel'] = np.arange(nchannel)
+        dims += ('channel',)
 
     return DataArray(dask_array, coords=coords, dims=dims).chunk(chunks=chunks)
 
@@ -137,53 +152,67 @@ class ImageSource(DataSourceMixin, PatternMixin):
 
     This creates an xarray.DataArray or an xarray.Dataset.
     See http://scikit-image.org/docs/dev/api/skimage.io.html#skimage.io.imread
-    for the file formats supported, and
-    http://docs.dask.org/en/latest/array-api.html#dask.array.image.imread
-    for possible extra arguments.
+    for the file formats supported.
 
-    NOTE: Although ``skimage.io.imread`` is used by default, any reader function which
-    accepts a filename and outputs a numpy array can be used instead.
+    NOTE: Although ``skimage.io.imread`` is used by default, any reader
+    function which accepts a filename and outputs a numpy array can be
+    used instead.
 
     Parameters
     ----------
     urlpath : str or iterable, location of data
         May be a local path, or remote path if including a protocol specifier
-        such as ``'s3://'``. May include glob wildcards or format pattern strings.
-        Must be a format supported by ``skimage.io.imread`` or user-supplied ``imread``
-        Some examples:
+        such as ``'s3://'``. May include glob wildcards or format pattern
+        strings. Must be a format supported by ``skimage.io.imread`` or
+        user-supplied ``imread``. Some examples:
             - ``{{ CATALOG_DIR }}data/RGB.tif``
             - ``s3://data/*.jpeg``
             - ``https://example.com/image.png`
-            - ``s3://data/Images/{{ landuse }}/{{ landuse }}{{ '%02d' % id }}.tif``
-    chunks: int or dict
+            - ``s3://data/Images/{{ landuse }}/{{ '%02d' % id }}.tif``
+    chunks : int or dict
         Chunks is used to load the new dataset into dask
         arrays. ``chunks={}`` loads the dataset with dask using a single
         chunk for all arrays.
-    path_as_pattern: bool or str, optional
+    path_as_pattern : bool or str, optional
         Whether to treat the path as a pattern (ie. ``data_{field}.tif``)
         and create new coodinates in the output corresponding to pattern
         fields. If str, is treated as pattern to match on. Default is True.
     concat_dim : str or iterable
         Dimension over which to concatenate. If iterable, all fields must be
         part of the the pattern.
-    xarray_kwargs : dict, optional
-        Any further arguments to pass to reader function.
+    imread : function (optional)
+        Optionally provide custom imread function.
+        Function should expect a filename and produce a numpy array.
+        Defaults to ``skimage.io.imread``.
+    preprocess : function (optional)
+        Optionally provide custom function to preprocess the image.
+        Function should expect a numpy array for a single image.
     """
     name = 'xarray_image'
 
     def __init__(self, urlpath, chunks=None, concat_dim='concat_dim',
-                 xarray_kwargs=None, metadata=None, path_as_pattern=True,
+                 metadata=None, path_as_pattern=True,
                  storage_options=None, **kwargs):
         self.path_as_pattern = path_as_pattern
         self.urlpath = urlpath
         self.chunks = chunks
         self.concat_dim = concat_dim
         self.storage_options = storage_options or {}
-        self._kwargs = xarray_kwargs or kwargs
+        self._kwargs = kwargs
         self._ds = None
         super(ImageSource, self).__init__(metadata=metadata)
 
     def _open_files(self, files):
+        """
+        This function is called when the data source refers to more
+        than one file either as a list or a glob. It sets up the
+        dask graph for opening the files.
+
+        Parameters
+        ----------
+        files : iter
+            List of file objects
+        """
         import pandas as pd
         from xarray import DataArray
 
@@ -218,6 +247,10 @@ class ImageSource(DataSourceMixin, PatternMixin):
             return out.assign_coords(**coords).chunk(self.chunks)
 
     def _open_dataset(self):
+        """
+        Main entry function the find a set of files and pass them to the
+        reader.
+        """
         from dask.bytes import open_files
 
         files = open_files(self.urlpath, **self.storage_options)
@@ -239,6 +272,7 @@ class ImageSource(DataSourceMixin, PatternMixin):
         if self._ds is None:
             self._open_dataset()
 
+            # convert to dataset for serialization
             ds2 = xr.Dataset({'raster': self._ds})
             metadata = {
                 'dims': dict(ds2.dims),
@@ -251,6 +285,7 @@ class ImageSource(DataSourceMixin, PatternMixin):
                 metadata['internal'] = serialize_zarr_ds(ds2)
             for k, v in self._ds.attrs.items():
                 try:
+                    # ensure only sending serializable attrs from remote
                     msgpack.packb(v)
                     metadata[k] = v
                 except TypeError:

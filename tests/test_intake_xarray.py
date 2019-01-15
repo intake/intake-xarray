@@ -251,3 +251,10 @@ def test_read_images_with_multiple_concat_dims_with_pattern():
     im = intake.open_xarray_image(path, concat_dim=['size', 'color'])
     ds = im.read()
     assert ds.sel(color='red', size='little').shape == (64, 64, 3)
+
+
+def test_read_jpg_image():
+    pytest.importorskip('skimage')
+    im = intake.open_xarray_image(os.path.join(here, 'data', 'dog.jpg'))
+    da = im.read()
+    assert da.shape == (192, 192)
