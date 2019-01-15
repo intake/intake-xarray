@@ -218,3 +218,43 @@ def test_read_pattern_path_as_pattern_as_str_with_list_of_urlpaths():
     for color, values in rgb.items():
         for i, v in enumerate(values):
             assert (da.sel(color=color).sel(band=i+1).values == v).all()
+
+
+def test_read_image():
+    pytest.importorskip('skimage')
+    im = intake.open_xarray_image(os.path.join(here, 'data', 'little_red.tif'))
+    da = im.read()
+    assert da.shape == (64, 64, 3)
+
+
+def test_read_images():
+    pytest.importorskip('skimage')
+    im = intake.open_xarray_image(os.path.join(here, 'data', 'little_*.tif'))
+    da = im.read()
+    assert da.shape == (2, 64, 64, 3)
+    assert da.dims == ('concat_dim', 'y', 'x', 'band')
+
+
+def test_read_images_with_pattern():
+    pytest.importorskip('skimage')
+    path = os.path.join(here, 'data', 'little_{color}.tif')
+    im = intake.open_xarray_image(path, concat_dim='color')
+    da = im.read()
+    assert da.shape == (2, 64, 64, 3)
+    assert len(da.color) == 2
+    assert set(da.color.data) == set(['red', 'green'])
+
+
+def test_read_images_with_multiple_concat_dims_with_pattern():
+    pytest.importorskip('skimage')
+    path = os.path.join(here, 'data', '{size}_{color}.tif')
+    im = intake.open_xarray_image(path, concat_dim=['size', 'color'])
+    ds = im.read()
+    assert ds.sel(color='red', size='little').shape == (64, 64, 3)
+
+
+def test_read_jpg_image():
+    pytest.importorskip('skimage')
+    im = intake.open_xarray_image(os.path.join(here, 'data', 'dog.jpg'))
+    da = im.read()
+    assert da.shape == (192, 192)

@@ -7,6 +7,7 @@ from .opendap import OpenDapSource
 from .raster import RasterIOSource
 from .xzarr import ZarrSource
 from .xarray_container import RemoteXarray
+from .image import ImageSource
 
 import intake.container
 
