@@ -60,7 +60,7 @@ def reader(file, chunks, imread=None, preprocess=None, **kwargs):
         chunk for all arrays.
     imread : function (optional)
         Optionally provide custom imread function.
-        Function should expect a filename and produce a numpy array.
+        Function should expect a file object and produce a numpy array.
         Defaults to ``skimage.io.imread``.
     preprocess : function (optional)
         Optionally provide custom function to preprocess the image.
@@ -114,7 +114,7 @@ def multireader(files, chunks, concat_dim, **kwargs):
         part of the the pattern.
     imread : function (optional)
         Optionally provide custom imread function.
-        Function should expect a filename and produce a numpy array.
+        Function should expect a file object and produce a numpy array.
         Defaults to ``skimage.io.imread``.
     preprocess : function (optional)
         Optionally provide custom function to preprocess the image.
@@ -155,7 +155,7 @@ class ImageSource(DataSourceMixin, PatternMixin):
     for the file formats supported.
 
     NOTE: Although ``skimage.io.imread`` is used by default, any reader
-    function which accepts a filename and outputs a numpy array can be
+    function which accepts a file object and outputs a numpy array can be
     used instead.
 
     Parameters
@@ -165,7 +165,7 @@ class ImageSource(DataSourceMixin, PatternMixin):
         such as ``'s3://'``. May include glob wildcards or format pattern
         strings. Must be a format supported by ``skimage.io.imread`` or
         user-supplied ``imread``. Some examples:
-            - ``{{ CATALOG_DIR }}data/RGB.tif``
+            - ``{{ CATALOG_DIR }}/data/RGB.tif``
             - ``s3://data/*.jpeg``
             - ``https://example.com/image.png`
             - ``s3://data/Images/{{ landuse }}/{{ '%02d' % id }}.tif``
@@ -182,11 +182,12 @@ class ImageSource(DataSourceMixin, PatternMixin):
         part of the the pattern.
     imread : function (optional)
         Optionally provide custom imread function.
-        Function should expect a filename and produce a numpy array.
+        Function should expect a file object and produce a numpy array.
         Defaults to ``skimage.io.imread``.
     preprocess : function (optional)
         Optionally provide custom function to preprocess the image.
-        Function should expect a numpy array for a single image.
+        Function should expect a numpy array for a single image and return
+        a numpy array.
     """
     name = 'xarray_image'
 
@@ -248,7 +249,7 @@ class ImageSource(DataSourceMixin, PatternMixin):
 
     def _open_dataset(self):
         """
-        Main entry function the find a set of files and pass them to the
+        Main entry function that finds a set of files and passes them to the
         reader.
         """
         from dask.bytes import open_files
