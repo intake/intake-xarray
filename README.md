@@ -16,12 +16,11 @@ In Intake-xarray, there are plugins provided for reading data into xarray with.
 The conda install instructions are:
 
 ```
-conda install -c intake intake-xarray
+conda install -c conda-forge intake-xarray
 ```
 
 To install optional dependencies:
 
 ```
-pip install rasterio
-conda install -c conda-forge zarr
+conda install -c conda-forge rasterio
 ```

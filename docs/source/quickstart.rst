@@ -10,14 +10,13 @@ Installation
 
 To use this plugin for `intake`_, install with the following command::
 
-   conda install -c intake intake-xarray
+   conda install -c conda-forge intake-xarray
 
 .. _intake: https://github.com/ContinuumIO/intake
 
 Usage
 -----
 
-Note that xarray sources do not yet support streaming from an Intake server.
 
 Ad-hoc
 ~~~~~~
