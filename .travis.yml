@@ -32,7 +32,8 @@ script:
       # If tagged git version, upload package to main channel
       anaconda -t ${ANACONDA_TOKEN} upload -u intake --force `conda build --output ./conda`
   else
-      conda install -y -c conda-forge -c defaults netcdf4 rasterio pynio
+      conda install -y -c conda-forge -c defaults --use-local intake
+      conda install -y -c conda-forge -c defaults netcdf4 rasterio pynio pytest
       pytest --verbose
   fi
 notifications:
