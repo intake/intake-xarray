@@ -58,8 +58,8 @@ def test_read_list_of_netcdf_files():
 
 
 def test_read_glob_pattern_of_netcdf_files():
+    pytest.importorskip('netcdf4')
     from intake_xarray.netcdf import NetCDFSource
-
     source = NetCDFSource(os.path.join(here, 'data', 'example_{num: d}.nc'),
                           concat_dim='num')
     d = source.to_dask()
