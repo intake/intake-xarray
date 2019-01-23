@@ -22,10 +22,10 @@ script:
 - |
   flake8 .
   if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-      conda build -c intake -c defaults -c conda-forge ./conda
+      conda build -c intake -c conda-forge -c defaults ./conda
   else
       # Workaround for Travis-CI bug #2: https://github.com/travis-ci/travis-ci/issues/7773
-      conda build -c intake -c defaults -c conda-forge --no-test ./conda
+      conda build -c intake -c conda-forge -c defaults --no-test ./conda
   fi
 - |
   if [ -n "$TRAVIS_TAG" ]; then
