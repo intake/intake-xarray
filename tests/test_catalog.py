@@ -4,7 +4,6 @@ import os
 import pytest
 
 from intake import open_catalog
-from .util import dataset  # noqa
 
 
 @pytest.fixture

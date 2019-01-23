@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os
+import posixpath
 import pytest
 import shutil
 import tempfile
@@ -11,11 +11,11 @@ from intake_xarray.xzarr import ZarrSource
 
 TEST_DATA_DIR = 'tests/data'
 TEST_DATA = 'example_1.nc'
-TEST_URLPATH = os.path.join(TEST_DATA_DIR, TEST_DATA)
+TEST_URLPATH = posixpath.join(TEST_DATA_DIR, TEST_DATA)
 
 
 @pytest.fixture
-def cdf_source():
+def netcdf_source():
     return NetCDFSource(TEST_URLPATH, {})
 
 
