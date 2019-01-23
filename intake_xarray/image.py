@@ -4,7 +4,51 @@ from intake.source.utils import reverse_formats
 from .base import DataSourceMixin, Schema
 
 
-def _dask_imread(files, imread=None, preprocess=None):
+def _coerce_shape(array, shape):
+    """ Trim or pad array to match desired shape"""
+    import numpy as np
+
+    if len(target_shape) != 2:
+        raise ValueError('coerce_shape must be an iterable of len 2')
+
+    target_shape = shape
+    actual_shape = array.shape
+    ndims = len(actual_shape)
+
+    if actual_shape[:2] == target_shape:
+        # no trimming or padding needed
+        return array
+
+    # do any necessary trimming first
+    for i, (a, t) in enumerate(zip(actual_shape[:2], target_shape)):
+        if a > t:
+            if i == 0:
+                if ndims == 2:
+                    array = [:t, :]
+                else:
+                    array = [:t, :, :]
+            else:
+                if ndims == 2:
+                    array = [:, :t]
+                else:
+                    array = [:, :t, :]
+
+    if array.shape[:2] == target_shape:
+        # only needed trimming
+        return array
+
+    # create array of zeros and fill with trimmed value array
+    new_array = np.zeros(target_shape)
+
+    if ndims == 2:
+        new_array[:array.shape[0], :array.shape[1]] = array
+    else:
+        new_array[:array.shape[0], :array.shape[1], :] = array
+
+    return new_array
+
+
+def _dask_imread(files, imread=None, preprocess=None, coerce_shape=None):
     """ Read a stack of images into a dask array """
     from dask.array import Array
     from dask.base import tokenize
