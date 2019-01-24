@@ -21,6 +21,9 @@ echo -e "$PINNED_PKGS" > $HOME/miniconda3/conda-meta/pinned
 
 echo "Configuring conda."
 conda config --set auto_update_conda off
+conda config --set always_yes yes
+conda config --add channels conda-forge
+conda config --get channels
 conda install --yes ${CONDA_REQS}
 
 echo "Installing test dependencies."

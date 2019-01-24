@@ -1,3 +1,4 @@
 # This file is also processed by conda-build, so keep spaces as "pkg >=1.2"
-intake >=0.3.0
+intake >=0.4.1
 xarray >=0.11.2
+zarr

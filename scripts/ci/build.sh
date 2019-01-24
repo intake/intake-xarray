@@ -11,10 +11,10 @@ if [ -n "$TRAVIS_TAG" ]; then
     anaconda -t ${ANACONDA_TOKEN} upload -u intake --force `conda build --output ./conda`
 else
     echo "Installing conda package locally."
-    conda install -y --use-local intake-xarray
+    conda install --use-local intake-xarray
 
     echo "Installing other test dependencies."
-    conda install -y -c conda-forge -c defaults netcdf4 rasterio pynio pytest scikit-image
+    conda install netcdf4 rasterio pynio pytest scikit-image
 
     echo "Running unit tests."
     py.test
