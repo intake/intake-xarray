@@ -24,7 +24,7 @@ Inline use
 
 After installation, the functions ``intake.open_netcdf``,
 ``intake.open_rasterio``, ``intake.open_zarr``,
-``intake.open_xarray_image``, and intake.open_opendap`` will become available.
+``intake.open_xarray_image``, and ``intake.open_opendap`` will become available.
 They can be used to open data files as xarray objects.
 
 
@@ -48,30 +48,31 @@ While all the drivers in the ``intake-xarray`` plugin yield ``xarray``
 objects, they do not all accept the same file formats.
 
 
-netcdf:
--------
+netcdf
+------
 
 Supports any file format that can be passed to xarray.open_dataset. this
 included .nc, .grib, and unauthenticated OPeNDAP URLs
 
-opendap:
---------
+opendap
+-------
 
 Supports OPeNDAP URLs that require authentication.
 
-zarr:
+zarr
 -----
 
-Supports .zarr files.
+Supports .zarr directories. See https://zarr.readthedocs.io/ for more
+information.
 
-rasterio:
----------
+rasterio
+--------
 
 Supports any file format supported by ``rasterio.open`` - most commonly
 geotiffs.
 
-xarray_image:
--------------
+xarray_image
+------------
 
 Supports any file format that can be passed to ``scikit-image.io.imread``
 which includes all the common image formats (jpg, png, tif, ...)
