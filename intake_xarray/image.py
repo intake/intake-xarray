@@ -11,7 +11,7 @@ def _coerce_shape(array, shape):
     if len(shape) != 2:
         raise ValueError('coerce_shape must be an iterable of len 2')
 
-    target_shape = shape
+    target_shape = tuple(shape)
     actual_shape = array.shape
     ndims = len(actual_shape)
 
@@ -54,6 +54,7 @@ def _dask_imread(files, imread=None, preprocess=None, coerce_shape=None):
     """ Read a stack of images into a dask array """
     from dask.array import Array
     from dask.base import tokenize
+    from functools import partial
 
     if not imread:
         from skimage.io import imread
@@ -69,19 +70,39 @@ def _dask_imread(files, imread=None, preprocess=None, coerce_shape=None):
 
     name = 'imread-%s' % tokenize(filenames)
 
+    if coerce_shape is not None:
+        reshape = partial(_coerce_shape, shape=coerce_shape)
+
     with files[0] as f:
         sample = imread(f)
+    if coerce_shape is not None:
+        sample = reshape(sample)
     if preprocess:
         sample = preprocess(sample)
 
     keys = [(name, i) + (0,) * len(sample.shape)
             for i in range(len(files))]
 
-    if preprocess:
-        values = [(add_leading_dimension, (preprocess, (_imread, f)))
+    if coerce_shape is not None:
+        if preprocess:
+            values = [(add_leading_dimension,
+                       (preprocess,
+                        (reshape,
+                         (_imread, f))))
+                      for f in files]
+        else:
+            values = [(add_leading_dimension,
+                       (reshape,
+                        (_imread, f)))
+                      for f in files]
+    elif preprocess:
+        values = [(add_leading_dimension,
+                   (preprocess,
+                    (_imread, f)))
                   for f in files]
     else:
-        values = [(add_leading_dimension, (_imread, f))
+        values = [(add_leading_dimension,
+                   (_imread, f))
                   for f in files]
     dsk = dict(zip(keys, values))
 
@@ -90,7 +111,7 @@ def _dask_imread(files, imread=None, preprocess=None, coerce_shape=None):
     return Array(dsk, name, chunks, sample.dtype)
 
 
-def reader(file, chunks, imread=None, preprocess=None, **kwargs):
+def reader(file, chunks, imread=None, preprocess=None, coerce_shape=None):
     """Read a file object and output an dask xarray object
 
     NOTE: inspired by dask.array.image.imread but altering the input to accept
@@ -111,10 +132,13 @@ def reader(file, chunks, imread=None, preprocess=None, **kwargs):
     preprocess : function (optional)
         Optionally provide custom function to preprocess the image.
         Function should expect a numpy array for a single image.
+    coerce_shape : tuple len 2 (optional)
+        Optionally coerce the shape of the height and width of the image
+        by setting `coerce_shape` to desired shape.
 
     Returns
     -------
-    Dask xarray.DataArray of all the image. Treated as one chunk unless
+    Dask xarray.DataArray of the image. Treated as one chunk unless
     chunks kwarg is specified.
     """
     import numpy as np
@@ -125,6 +149,8 @@ def reader(file, chunks, imread=None, preprocess=None, **kwargs):
 
     with file as f:
         array = imread(f)
+    if coerce_shape is not None:
+        array = _coerce_shape(sample, shape=coerce_shape)
     if preprocess:
         array = preprocess(array)
 
@@ -165,6 +191,9 @@ def multireader(files, chunks, concat_dim, **kwargs):
     preprocess : function (optional)
         Optionally provide custom function to preprocess the image.
         Function should expect a numpy array for a single image.
+    coerce_shape : iterable of len 2 (optional)
+        Optionally coerce the shape of the height and width of the image
+        by setting `coerce_shape` to desired shape.
 
     Returns
     -------
@@ -234,6 +263,9 @@ class ImageSource(DataSourceMixin, PatternMixin):
         Optionally provide custom function to preprocess the image.
         Function should expect a numpy array for a single image and return
         a numpy array.
+    coerce_shape : iterable of len 2 (optional)
+        Optionally coerce the shape of the height and width of the image
+        by setting `coerce_shape` to desired shape.
     """
     name = 'xarray_image'
 

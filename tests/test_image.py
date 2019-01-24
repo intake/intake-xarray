@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+import os
 import numpy as np
 import pytest
 
-from intake_xarray.image import _coerce_shape
+from intake_xarray.image import _coerce_shape, ImageSource
+
+here = os.path.dirname(__file__)
 
 
 @pytest.mark.parametrize('im', [
@@ -123,3 +126,26 @@ def test_coerce_shape_array_non_int():
     actual = _coerce_shape(array, shape)
     assert (expected == actual).all()
     assert expected.dtype == np.float
+
+
+def test_read_image():
+    urlpath = os.path.join(here, 'data', 'images', 'beach57.tif')
+    source = ImageSource(urlpath=urlpath)
+    array = source.read()
+    assert array.shape == (256, 252, 3)
+    assert array.dtype == np.uint8
+
+
+def test_read_images_as_glob_without_coerce_raises_error():
+    urlpath = os.path.join(here, 'data', 'images', '*')
+    source = ImageSource(urlpath=urlpath)
+    with pytest.raises(ValueError,
+                       match='could not broadcast input array'):
+        source.read()
+
+
+def test_read_images_as_glob_with_coerce():
+    urlpath = os.path.join(here, 'data', 'images', '*')
+    source = ImageSource(urlpath=urlpath, coerce_shape=(256, 256))
+    array = source.read()
+    assert array.shape == (3, 256, 256, 3)
