@@ -1,7 +1,7 @@
 function build(){
-    conda build --no-test ./conda
-    conda install --use-local intake-xarray
-    conda install netcdf4 rasterio pynio pytest scikit-image
+    conda build -c conda-forge -c defaults --no-test ./conda
+    conda install -c conda-forge -c defaults --use-local intake-xarray
+    conda install -c conda-forge -c defaults netcdf4 rasterio pynio pytest scikit-image
     conda list
 }
 
