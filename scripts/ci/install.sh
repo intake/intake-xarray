@@ -20,11 +20,10 @@ mkdir -p $HOME/miniconda3/conda-meta
 echo -e "$PINNED_PKGS" > $HOME/miniconda3/conda-meta/pinned
 
 echo "Configuring conda."
-conda config --set auto_update_conda off
-conda config --set always_yes yes
+conda update conda
+conda config --set auto_update_conda off --set always_yes yes --set verbosity 1
 conda config --add channels conda-forge
-conda config --get channels
-conda config --set verbosity 1
+conda install ${CONDA_REQS}
 
 echo "Installing dependencies."
-conda create -n intake python=3.6 ${CONDA_REQS} `python scripts/deps.py`
+conda create -n intake python=3.6 `python scripts/deps.py`
