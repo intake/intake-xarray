@@ -2,6 +2,10 @@
 
 set -e # exit on error
 
+echo "Activating environment"
+conda activate intake
+conda list
+
 echo "Building conda package."
 conda build -c conda-forge -c defaults --no-test ./conda
 
@@ -11,10 +15,8 @@ if [ -n "$TRAVIS_TAG" ]; then
     anaconda -t ${ANACONDA_TOKEN} upload -u intake --force `conda build --output ./conda`
 else
     echo "Installing conda package locally."
-    conda install --use-local intake-xarray
-
-    echo "Installing other test dependencies."
-    conda install netcdf4 rasterio pynio pytest scikit-image
+    conda install --use-local intake-xarray netcdf4 rasterio pynio pytest scikit-image
+    conda list
 
     echo "Running unit tests."
     py.test

@@ -3,9 +3,8 @@ function install() {
     conda config --set always_yes yes
     conda config --add channels conda-forge
     conda config --get channels
-    conda update -q conda
-    conda install jinja2 pyyaml pytest conda-build
-    conda install $(python scripts/deps.py)
+    conda config –set verbosity 3
+    conda create -n intake python=3.6 conda-build jinja2 pyyaml pytest $(python scripts/deps.py)
 }
 
 install

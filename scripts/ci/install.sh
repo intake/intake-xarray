@@ -24,7 +24,7 @@ conda config --set auto_update_conda off
 conda config --set always_yes yes
 conda config --add channels conda-forge
 conda config --get channels
-conda install --yes ${CONDA_REQS}
+conda config –set verbosity 3
 
-echo "Installing test dependencies."
-conda install --yes `python scripts/deps.py`
+echo "Installing dependencies."
+conda create -n intake python=3.6 ${CONDA_REQS} `python scripts/deps.py`
