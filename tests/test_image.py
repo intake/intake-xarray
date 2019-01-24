@@ -129,6 +129,7 @@ def test_coerce_shape_array_non_int():
 
 
 def test_read_image():
+    pytest.importorskip('skimage')
     urlpath = os.path.join(here, 'data', 'images', 'beach57.tif')
     source = ImageSource(urlpath=urlpath)
     array = source.read()
@@ -137,6 +138,7 @@ def test_read_image():
 
 
 def test_read_images_as_glob_without_coerce_raises_error():
+    pytest.importorskip('skimage')
     urlpath = os.path.join(here, 'data', 'images', '*')
     source = ImageSource(urlpath=urlpath)
     with pytest.raises(ValueError,
@@ -145,6 +147,7 @@ def test_read_images_as_glob_without_coerce_raises_error():
 
 
 def test_read_images_as_glob_with_coerce():
+    pytest.importorskip('skimage')
     urlpath = os.path.join(here, 'data', 'images', '*')
     source = ImageSource(urlpath=urlpath, coerce_shape=(256, 256))
     array = source.read()
