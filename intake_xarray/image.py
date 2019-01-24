@@ -8,7 +8,7 @@ def _coerce_shape(array, shape):
     """ Trim or pad array to match desired shape"""
     import numpy as np
 
-    if len(target_shape) != 2:
+    if len(shape) != 2:
         raise ValueError('coerce_shape must be an iterable of len 2')
 
     target_shape = shape
@@ -24,25 +24,27 @@ def _coerce_shape(array, shape):
         if a > t:
             if i == 0:
                 if ndims == 2:
-                    array = [:t, :]
+                    array = array[:t, :]
                 else:
-                    array = [:t, :, :]
+                    array = array[:t, :, :]
             else:
                 if ndims == 2:
-                    array = [:, :t]
+                    array = array[:, :t]
                 else:
-                    array = [:, :t, :]
+                    array = array[:, :t, :]
 
     if array.shape[:2] == target_shape:
         # only needed trimming
         return array
 
     # create array of zeros and fill with trimmed value array
-    new_array = np.zeros(target_shape)
-
     if ndims == 2:
+        new_array = np.zeros(target_shape, dtype=array.dtype)
         new_array[:array.shape[0], :array.shape[1]] = array
     else:
+        new_array = np.zeros((target_shape[0],
+                              target_shape[1],
+                              actual_shape[2]), dtype=array.dtype)
         new_array[:array.shape[0], :array.shape[1], :] = array
 
     return new_array
