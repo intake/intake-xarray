@@ -232,7 +232,7 @@ def test_read_images():
     im = intake.open_xarray_image(os.path.join(here, 'data', 'little_*.tif'))
     da = im.read()
     assert da.shape == (2, 64, 64, 3)
-    assert da.dims == ('concat_dim', 'y', 'x', 'band')
+    assert da.dims == ('concat_dim', 'y', 'x', 'channel')
 
 
 def test_read_images_with_pattern():
