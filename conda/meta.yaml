@@ -22,6 +22,8 @@ requirements:
     - python
 
     {% for dep in data['install_requires'] %}
+    - {{ dep.lower() }}
+    {% endfor %}
 
 test:
   source_files:
