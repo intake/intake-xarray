@@ -176,7 +176,9 @@ def multireader(files, chunks, concat_dim, **kwargs):
     Parameters
     ----------
     files : iter
-        List of file objects
+        List of file objects where each file contains data with the same
+        shape. If this is not the case, use preprocess to coerce data into
+        a shape
     chunks : int or dict
         Chunks is used to load the new dataset into dask
         arrays. ``chunks={}`` loads the dataset with dask using a single
@@ -242,7 +244,7 @@ class ImageSource(DataSourceMixin, PatternMixin):
         user-supplied ``imread``. Some examples:
             - ``{{ CATALOG_DIR }}/data/RGB.tif``
             - ``s3://data/*.jpeg``
-            - ``https://example.com/image.png`
+            - ``https://example.com/image.png``
             - ``s3://data/Images/{{ landuse }}/{{ '%02d' % id }}.tif``
     chunks : int or dict
         Chunks is used to load the new dataset into dask
