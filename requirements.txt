@@ -1,7 +1,3 @@
-intake
-dask
-requests
-pandas
-scipy
-xarray
-pytest
+# This file is also processed by conda-build, so keep spaces as "pkg >=1.2"
+intake >=0.3.0
+xarray >=0.11.2

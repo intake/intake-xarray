@@ -1,9 +1,16 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+#-----------------------------------------------------------------------------
+# Copyright (c) 2012 - 2018, Anaconda, Inc. and Intake contributors
+# All rights reserved.
+#
+# The full license is in the LICENSE file, distributed with this software.
+#-----------------------------------------------------------------------------
 
 from setuptools import setup, find_packages
 import versioneer
 
-requires = open('requirements.txt').read().strip().split('\n')
+requires = [line.strip() for line in open(
+    'requirements.txt').readlines() if not line.startswith("#")]
 
 setup(
     name='intake-xarray',
@@ -19,5 +26,6 @@ setup(
     package_data={'': ['*.csv', '*.yml', '*.html']},
     include_package_data=True,
     install_requires=requires,
-    long_description=open('README.rst').read(),
+    long_description=open('README.md').read(),
+    long_description_content_type="text/markdown",
     zip_safe=False, )
