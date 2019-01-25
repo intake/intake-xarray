@@ -8,6 +8,11 @@ environment:
   matrix:
     - MINICONDA: C:\Miniconda36-x64
       CONDA_ENV: py36
+    - MINICONDA: C:\Miniconda36-x64
+      CONDA_ENV: py36-defaults
+    allow_failures:
+      - CONDA_ENV: py36-defaults
+
 
 skip_branch_with_pr: true
 clone_depth: 5
@@ -19,10 +24,13 @@ init:
 
 install:
   - powershell .\\ci\\appveyor\\install.ps1
+  - "conda env create -n test_env --file ci/%CONDA_ENV%.yml"
 
 build_script:
   - powershell .\\ci\\appveyor\\build.ps1
 
 test_script:
-  - powershell .\\ci\\appveyor\\test.ps1
-
+  - "activate test_env"
+  - "pip install --no-deps -e ."
+  - "conda list"
+  - "pytest --verbose"

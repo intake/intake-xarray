@@ -21,6 +21,7 @@ matrix:
     - env: CONDA_ENV=py36-defaults
   allow_failures:
     - env: CONDA_ENV=py27
+    - env: CONDA_ENV=py36-defaults
   global:
     secure: cfv2rjBvZZuebRbqRl1zF0INUmK/Uktes4jEbxWHyzUhGYqdGk2+mbZiT+brV85+43Q8xwmce8oiw2ZLA0U/T7L3rVbT6xtlo4blT277DY2kyKcyFIVfkTcUdlu/2i+3O7lqBjzZNXP0lHbNfEQCUAq1k9hz5/gHDsSdkImnwae3EWXma8n7aw3aQlb48McACdjVZdNvvr7lwfIVvcA7QdrgZSwQ3CxlPf5QOMTu2czpwlEXfnxiv0ysv8lrVNrmDObkjLpgVFyxh3yajL126q+hHtPsR4dtDYb615xUpSZd9BU6H27fJdc9nFAGBMxIIlqt9q6q7VJ8mTNPt+2BnPLZtKK+6xvvh7RrKtbwfBKSI0mFWCFSgLMEqka23y9S2jRkrT7Xr0gk32L6AmSItjKXRalVPZHJm4WTLYDYWEOVqpK7xvYVlFFBQ/XWraQUeD7xBz9BPInKm5gugUuPgRqdNA96XEhLX/gEhIE+rZf1AlbtfM7whpV3/pd6d6P+S+YGG3jbfjwJ884JeIovKrM5g4R9E8LAayWTGaSBNSGQX7F3QyZ+g8fIixaKx2JJtFPYE7tt0XbYzbI4Gd1NC/YWGMD+/EDaDUFEpySxGn0FUtbZaYX7czfPQiA44u/CuSpzdBec5LzHyrWmYWWxYxHu75qQQBfqhHAg44ZTR7w=
 
