@@ -1,0 +1,13 @@
+name: test_env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.6
+  - intake>=0.4.1
+  - xarray>=0.11.2
+  - zarr
+  - pytest
+  - netcdf4
+  - rasterio
+  # - pynio turned off because it'll fail on windows
+  - scikit-image

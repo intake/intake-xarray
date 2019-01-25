@@ -9,8 +9,7 @@
 from setuptools import setup, find_packages
 import versioneer
 
-requires = [line.strip() for line in open(
-    'requirements.txt').readlines() if not line.startswith("#")]
+INSTALL_REQUIRES = ['intake >= 0.4.1', 'xarray >=  0.11.2', 'zarr']
 
 setup(
     name='intake-xarray',
@@ -25,7 +24,7 @@ setup(
     packages=find_packages(),
     package_data={'': ['*.csv', '*.yml', '*.html']},
     include_package_data=True,
-    install_requires=requires,
+    install_requires=INSTALL_REQUIRES,
     long_description=open('README.md').read(),
     long_description_content_type="text/markdown",
     zip_safe=False, )

@@ -7,6 +7,7 @@ platform:
 environment:
   matrix:
     - MINICONDA: C:\Miniconda36-x64
+      CONDA_ENV: py36
 
 skip_branch_with_pr: true
 clone_depth: 5
@@ -17,10 +18,11 @@ init:
   - cmd: echo %path%
 
 install:
-  - powershell .\\scripts\\ci\\appveyor\\install.ps1
+  - powershell .\\ci\\appveyor\\install.ps1
 
 build_script:
-  - powershell .\\scripts\\ci\\appveyor\\build.ps1
+  - powershell .\\ci\\appveyor\\build.ps1
 
 test_script:
-  - py.test
+  - powershell .\\ci\\appveyor\\test.ps1
+
