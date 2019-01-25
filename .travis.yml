@@ -1,38 +1,43 @@
+# Based on http://conda.pydata.org/docs/travis.html
 language: generic
-sudo: required
+
+git:
+  depth: false
+
 os:
-- linux
-env:
-  matrix:
-  - CONDA_PY=36
+  - linux
+
+branches:
+  only:
+    - master
+
+matrix:
+  fast_finish: true
+  include:
+    - env: CONDA_ENV=build
+    - env: CONDA_ENV=py36
+    - env: CONDA_ENV=py27
+    - env: CONDA_ENV=py36-defaults
+    - env: CONDA_ENV=py37-nodefaults
+  allow_failures:
+    - env: CONDA_ENV=py27
+    - env: CONDA_ENV=py36-defaults
+    - env: CONDA_ENV=py37-nodefaults
   global:
     secure: cfv2rjBvZZuebRbqRl1zF0INUmK/Uktes4jEbxWHyzUhGYqdGk2+mbZiT+brV85+43Q8xwmce8oiw2ZLA0U/T7L3rVbT6xtlo4blT277DY2kyKcyFIVfkTcUdlu/2i+3O7lqBjzZNXP0lHbNfEQCUAq1k9hz5/gHDsSdkImnwae3EWXma8n7aw3aQlb48McACdjVZdNvvr7lwfIVvcA7QdrgZSwQ3CxlPf5QOMTu2czpwlEXfnxiv0ysv8lrVNrmDObkjLpgVFyxh3yajL126q+hHtPsR4dtDYb615xUpSZd9BU6H27fJdc9nFAGBMxIIlqt9q6q7VJ8mTNPt+2BnPLZtKK+6xvvh7RrKtbwfBKSI0mFWCFSgLMEqka23y9S2jRkrT7Xr0gk32L6AmSItjKXRalVPZHJm4WTLYDYWEOVqpK7xvYVlFFBQ/XWraQUeD7xBz9BPInKm5gugUuPgRqdNA96XEhLX/gEhIE+rZf1AlbtfM7whpV3/pd6d6P+S+YGG3jbfjwJ884JeIovKrM5g4R9E8LAayWTGaSBNSGQX7F3QyZ+g8fIixaKx2JJtFPYE7tt0XbYzbI4Gd1NC/YWGMD+/EDaDUFEpySxGn0FUtbZaYX7czfPQiA44u/CuSpzdBec5LzHyrWmYWWxYxHu75qQQBfqhHAg44ZTR7w=
-install:
-- |
-  echo "Installing a fresh version of Miniconda."
-  MINICONDA_URL="https://repo.continuum.io/miniconda"
-  MINICONDA_FILE="Miniconda3-latest-$(case $TRAVIS_OS_NAME in (linux) echo Linux;; (osx) echo MacOSX;;esac)-x86_64.sh"
-  curl -L -O "${MINICONDA_URL}/${MINICONDA_FILE}"
-  bash $MINICONDA_FILE -b
-- |
-  echo "Configuring conda."
-  source $HOME/miniconda3/bin/activate root
-  conda install -y conda-build anaconda-client flake8
+
+before_install:
+  - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+
+install: bash ci/travis/install.sh
+
 script:
-- |
-  flake8 .
-  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-      conda build -c intake -c defaults -c conda-forge ./conda
-  else
-      # Workaround for Travis-CI bug #2: https://github.com/travis-ci/travis-ci/issues/7773
-      conda build -c intake -c defaults -c conda-forge --no-test ./conda
-  fi
-- |
-  if [ -n "$TRAVIS_TAG" ]; then
-      # If tagged git version, upload package to main channel
-      anaconda -t ${ANACONDA_TOKEN} upload -u intake --force `conda build --output ./conda`
-  fi
-notifications:
-  email: false
-  on_success: change
-  on_failure: always
+  - which python
+  - python --version
+  - if [[ "$CONDA_ENV" == "build" ]]; then
+      bash ci/travis/build.sh;
+    else
+      bash ci/travis/test.sh;
+    fi

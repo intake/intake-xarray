@@ -1,6 +1,8 @@
+{% set data = load_setup_py_data() %}
+
 package:
    name: intake-xarray
-   version: {{ GIT_DESCRIBE_TAG }}
+   version: {{ data['version'] }}
 
 source:
    path: ..
@@ -8,7 +10,7 @@ git:
   depth: false
 
 build:
-  number: {{ GIT_DESCRIBE_NUMBER }}
+  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
   script: python setup.py install --single-version-externally-managed --record=record.txt
   noarch: python
 
@@ -17,11 +19,11 @@ requirements:
     - python
     - jinja2
   run:
-    - intake>=0.2
     - python
-    - scipy
-    - xarray
-    - zarr
+
+    {% for dep in data['install_requires'] %}
+    - {{ dep.lower() }}
+    {% endfor %}
 
 test:
   source_files:
@@ -32,8 +34,7 @@ test:
     - py.test --verbose
 
 about:
-  home: https://github.com/ContinuumIO/intake-xarray
-  license: BSD
+  home: {{ data['url'] }}
+  license: {{ data['license'] }}
   license_file: LICENSE
-  summary: |
-    xarray plugins for Intake
+  summary: {{ data['description'] }}

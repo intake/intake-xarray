@@ -7,12 +7,10 @@ import intake
 
 here = os.path.dirname(__file__)
 
-from .util import TEST_URLPATH, cdf_source, zarr_source, dataset  # noqa
 
-
-@pytest.mark.parametrize('source', ['cdf', 'zarr'])
-def test_discover(source, cdf_source, zarr_source, dataset):
-    source = {'cdf': cdf_source, 'zarr': zarr_source}[source]
+@pytest.mark.parametrize('source', ['netcdf', 'zarr'])
+def test_discover(source, netcdf_source, zarr_source, dataset):
+    source = {'netcdf': netcdf_source, 'zarr': zarr_source}[source]
     r = source.discover()
 
     assert r['datashape'] is None
@@ -25,9 +23,9 @@ def test_discover(source, cdf_source, zarr_source, dataset):
     assert set(source.metadata['coords']) == set(dataset.coords.keys())
 
 
-@pytest.mark.parametrize('source', ['cdf', 'zarr'])
-def test_read(source, cdf_source, zarr_source, dataset):
-    source = {'cdf': cdf_source, 'zarr': zarr_source}[source]
+@pytest.mark.parametrize('source', ['netcdf', 'zarr'])
+def test_read(source, netcdf_source, zarr_source, dataset):
+    source = {'netcdf': netcdf_source, 'zarr': zarr_source}[source]
 
     ds = source.read_chunked()
     assert ds.temp.chunks
@@ -38,14 +36,40 @@ def test_read(source, cdf_source, zarr_source, dataset):
     assert np.all(ds.rh == dataset.rh)
 
 
-def test_read_partition_cdf(cdf_source):
-    source = cdf_source
+def test_read_partition_netcdf(netcdf_source):
+    source = netcdf_source
     with pytest.raises(TypeError):
         source.read_partition(None)
     out = source.read_partition(('temp', 0, 0, 0, 0))
     d = source.to_dask()['temp'].data
     expected = d[:1, :4, :5, :10].compute()
     assert np.all(out == expected)
+
+
+def test_read_list_of_netcdf_files():
+    from intake_xarray.netcdf import NetCDFSource
+    source = NetCDFSource([
+        os.path.join(here, 'data', 'example_1.nc'),
+        os.path.join(here, 'data', 'example_2.nc'),
+    ])
+    d = source.to_dask()
+    assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 1,
+                      'concat_dim': 2}
+
+
+def test_read_glob_pattern_of_netcdf_files():
+    """If xarray is old, prompt user to update to use pattern"""
+    from intake_xarray.netcdf import NetCDFSource, XARRAY_VERSION
+    source = NetCDFSource(os.path.join(here, 'data', 'example_{num: d}.nc'),
+                          concat_dim='num')
+    if not (XARRAY_VERSION > '0.11.1'):
+        with pytest.raises(ImportError, match='open_dataset was added in 0.11.2'):
+            source.to_dask()
+    else:
+        d = source.to_dask()
+        assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 1,
+                          'num': 2}
+        assert (d.num.data == np.array([1, 2])).all()
 
 
 def test_read_partition_zarr(zarr_source):
@@ -57,9 +81,9 @@ def test_read_partition_zarr(zarr_source):
     assert np.all(out == expected)
 
 
-@pytest.mark.parametrize('source', ['cdf', 'zarr'])
-def test_to_dask(source, cdf_source, zarr_source, dataset):
-    source = {'cdf': cdf_source, 'zarr': zarr_source}[source]
+@pytest.mark.parametrize('source', ['netcdf', 'zarr'])
+def test_to_dask(source, netcdf_source, zarr_source, dataset):
+    source = {'netcdf': netcdf_source, 'zarr': zarr_source}[source]
     ds = source.to_dask()
 
     assert ds.dims == dataset.dims
@@ -222,14 +246,16 @@ def test_read_pattern_path_as_pattern_as_str_with_list_of_urlpaths():
 
 def test_read_image():
     pytest.importorskip('skimage')
-    im = intake.open_xarray_image(os.path.join(here, 'data', 'little_red.tif'))
+    from intake_xarray.image import ImageSource
+    im = ImageSource(os.path.join(here, 'data', 'little_red.tif'))
     da = im.read()
     assert da.shape == (64, 64, 3)
 
 
 def test_read_images():
     pytest.importorskip('skimage')
-    im = intake.open_xarray_image(os.path.join(here, 'data', 'little_*.tif'))
+    from intake_xarray.image import ImageSource
+    im = ImageSource(os.path.join(here, 'data', 'little_*.tif'))
     da = im.read()
     assert da.shape == (2, 64, 64, 3)
     assert da.dims == ('concat_dim', 'y', 'x', 'channel')
@@ -237,8 +263,9 @@ def test_read_images():
 
 def test_read_images_with_pattern():
     pytest.importorskip('skimage')
+    from intake_xarray.image import ImageSource
     path = os.path.join(here, 'data', 'little_{color}.tif')
-    im = intake.open_xarray_image(path, concat_dim='color')
+    im = ImageSource(path, concat_dim='color')
     da = im.read()
     assert da.shape == (2, 64, 64, 3)
     assert len(da.color) == 2
@@ -247,14 +274,16 @@ def test_read_images_with_pattern():
 
 def test_read_images_with_multiple_concat_dims_with_pattern():
     pytest.importorskip('skimage')
+    from intake_xarray.image import ImageSource
     path = os.path.join(here, 'data', '{size}_{color}.tif')
-    im = intake.open_xarray_image(path, concat_dim=['size', 'color'])
+    im = ImageSource(path, concat_dim=['size', 'color'])
     ds = im.read()
     assert ds.sel(color='red', size='little').shape == (64, 64, 3)
 
 
 def test_read_jpg_image():
     pytest.importorskip('skimage')
-    im = intake.open_xarray_image(os.path.join(here, 'data', 'dog.jpg'))
+    from intake_xarray.image import ImageSource
+    im = ImageSource(os.path.join(here, 'data', 'dog.jpg'))
     da = im.read()
     assert da.shape == (192, 192)
