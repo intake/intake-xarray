@@ -10,8 +10,10 @@ environment:
       CONDA_ENV: py36
     - MINICONDA: C:\Miniconda36-x64
       CONDA_ENV: py36-defaults
-    allow_failures:
-      - CONDA_ENV: py36-defaults
+
+matrix:
+  allow_failures:
+    - CONDA_ENV: py36-defaults
 
 
 skip_branch_with_pr: true
