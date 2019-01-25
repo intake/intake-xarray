@@ -9,7 +9,7 @@
 from setuptools import setup, find_packages
 import versioneer
 
-INSTALL_REQUIRES = ['intake >= 0.4.1', 'xarray >=  0.11.2', 'zarr']
+INSTALL_REQUIRES = ['intake >=0.4.1', 'xarray >=0.11.2', 'zarr']
 
 setup(
     name='intake-xarray',
