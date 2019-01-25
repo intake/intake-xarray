@@ -2,7 +2,7 @@
 set -e # exit on error
 
 echo "Installing dependencies."
-conda install -c conda-forge conda-build jinja2 intake>=0.11.2 xarray>=0.4.2 zarr
+conda install -c conda-forge conda-build jinja2 intake>=0.4.1 xarray>=0.11.2 zarr
 conda list
 
 echo "Building conda package."
