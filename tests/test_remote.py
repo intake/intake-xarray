@@ -33,7 +33,6 @@ def intake_server():
 
 
 def test_remote_netcdf(intake_server):
-    pytest.importorskip('scipy')
     cat_local = intake.open_catalog(cat_file)
     cat = intake.open_catalog(intake_server)
     assert 'xarray_source' in cat

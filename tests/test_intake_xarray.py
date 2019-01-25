@@ -10,7 +10,6 @@ here = os.path.dirname(__file__)
 
 @pytest.mark.parametrize('source', ['netcdf', 'zarr'])
 def test_discover(source, netcdf_source, zarr_source, dataset):
-    pytest.importorskip('scipy')
     source = {'netcdf': netcdf_source, 'zarr': zarr_source}[source]
     r = source.discover()
 
@@ -26,7 +25,6 @@ def test_discover(source, netcdf_source, zarr_source, dataset):
 
 @pytest.mark.parametrize('source', ['netcdf', 'zarr'])
 def test_read(source, netcdf_source, zarr_source, dataset):
-    pytest.importorskip('scipy')
     source = {'netcdf': netcdf_source, 'zarr': zarr_source}[source]
 
     ds = source.read_chunked()
@@ -39,7 +37,6 @@ def test_read(source, netcdf_source, zarr_source, dataset):
 
 
 def test_read_partition_netcdf(netcdf_source):
-    pytest.importorskip('scipy')
     source = netcdf_source
     with pytest.raises(TypeError):
         source.read_partition(None)
@@ -50,7 +47,6 @@ def test_read_partition_netcdf(netcdf_source):
 
 
 def test_read_list_of_netcdf_files():
-    pytest.importorskip('netCDF4')
     from intake_xarray.netcdf import NetCDFSource
     source = NetCDFSource([
         os.path.join(here, 'data', 'example_1.nc'),
@@ -63,7 +59,6 @@ def test_read_list_of_netcdf_files():
 
 def test_read_glob_pattern_of_netcdf_files():
     """If xarray is old, prompt user to update to use pattern"""
-    pytest.importorskip('netCDF4')
     from intake_xarray.netcdf import NetCDFSource, XARRAY_VERSION
     source = NetCDFSource(os.path.join(here, 'data', 'example_{num: d}.nc'),
                           concat_dim='num')
@@ -78,7 +73,6 @@ def test_read_glob_pattern_of_netcdf_files():
 
 
 def test_read_partition_zarr(zarr_source):
-    pytest.importorskip('scipy')
     source = zarr_source
     with pytest.raises(TypeError):
         source.read_partition(None)
@@ -89,7 +83,6 @@ def test_read_partition_zarr(zarr_source):
 
 @pytest.mark.parametrize('source', ['netcdf', 'zarr'])
 def test_to_dask(source, netcdf_source, zarr_source, dataset):
-    pytest.importorskip('scipy')
     source = {'netcdf': netcdf_source, 'zarr': zarr_source}[source]
     ds = source.to_dask()
 

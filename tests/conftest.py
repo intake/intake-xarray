@@ -16,13 +16,11 @@ TEST_URLPATH = posixpath.join(TEST_DATA_DIR, TEST_DATA)
 
 @pytest.fixture
 def netcdf_source():
-    pytest.importorskip('scipy')
     return NetCDFSource(TEST_URLPATH, {})
 
 
 @pytest.fixture
 def dataset():
-    pytest.importorskip('scipy')
     return xr.open_dataset(TEST_URLPATH)
 
 
