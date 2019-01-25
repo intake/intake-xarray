@@ -27,12 +27,9 @@ init:
 install:
   - powershell .\\ci\\appveyor\\install.ps1
   - "conda env create -n test_env --file ./ci/environment-%CONDA_ENV%.yml"
-
-build_script:
-  - powershell .\\ci\\appveyor\\build.ps1
-
-test_script:
   - "activate test_env"
   - "python setup.py install"
   - "conda list"
+
+test_script:
   - "pytest --verbose"
