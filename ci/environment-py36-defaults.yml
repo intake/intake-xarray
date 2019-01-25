@@ -1,0 +1,10 @@
+name: test_env
+dependencies:
+  - python=3.6
+  - intake
+  - xarray
+  - zarr
+  - pytest
+  - netcdf4
+  - rasterio
+  - scikit-image

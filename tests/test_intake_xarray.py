@@ -62,14 +62,19 @@ def test_read_list_of_netcdf_files():
 
 
 def test_read_glob_pattern_of_netcdf_files():
+    """If xarray is old, prompt user to update to use pattern"""
     pytest.importorskip('netCDF4')
-    from intake_xarray.netcdf import NetCDFSource
+    from intake_xarray.netcdf import NetCDFSource, XARRAY_VERSION
     source = NetCDFSource(os.path.join(here, 'data', 'example_{num: d}.nc'),
                           concat_dim='num')
-    d = source.to_dask()
-    assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 1,
-                      'num': 2}
-    assert (d.num.data == np.array([1, 2])).all()
+    if not (XARRAY_VERSION > '0.11.1'):
+        with pytest.raises(ImportError, match='open_dataset was added in 0.11.2'):
+            source.to_dask()
+    else:
+        d = source.to_dask()
+        assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 1,
+                          'num': 2}
+        assert (d.num.data == np.array([1, 2])).all()
 
 
 def test_read_partition_zarr(zarr_source):

@@ -18,6 +18,7 @@ matrix:
     - env: CONDA_ENV=py36
     - env: CONDA_ENV=py37
     - env: CONDA_ENV=py27
+    - env: CONDA_ENV=py36-defaults
   allow_failures:
     - env: CONDA_ENV=py27
   global:
