@@ -9,5 +9,4 @@ dependencies:
   - pytest
   - netcdf4
   - rasterio
-  # - pynio turned off because it'll fail on windows
   - scikit-image
