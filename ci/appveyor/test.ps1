@@ -1,5 +1,5 @@
 function test() {
-    conda env create -n test_env --file ci/environment-${CONDA_ENV}.yml
+    conda env create -n test_env --file ci/environment-py36.yml
     activate test_env
     conda list
     pip install --no-deps -e .
