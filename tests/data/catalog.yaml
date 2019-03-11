@@ -91,3 +91,8 @@ sources:
         band: 3
       concat_dim: color
       path_as_pattern: '{{ CATALOG_DIR }}/little_{color}.tif'
+  blank:
+    desciption: little zarr set
+    driver: zarr
+    args:
+      urlpath: "{{CATALOG_DIR}}/blank.zarr"

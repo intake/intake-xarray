@@ -167,3 +167,15 @@ class RemoteXarray(RemoteSource):
     def close(self):
         self._ds = None
         self._schema = None
+
+    @staticmethod
+    def _persist(source, path, **kwargs):
+        """Save data to a local zarr
+
+        Uses
+        http://xarray.pydata.org/en/stable/generated/xarray.Dataset.to_zarr.html
+        """
+        from intake_xarray import ZarrSource
+        source.to_dask().to_zarr(path, **kwargs)
+        return ZarrSource(path)
+
