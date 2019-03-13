@@ -1,0 +1,12 @@
+{
+    "_ARRAY_DIMENSIONS": [
+        "time",
+        "lat",
+        "lon"
+    ],
+    "long_name": "relative humidity",
+    "valid_range": [
+        0.0,
+        1.0
+    ]
+}

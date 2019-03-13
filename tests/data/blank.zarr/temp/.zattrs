@@ -1,0 +1,10 @@
+{
+    "_ARRAY_DIMENSIONS": [
+        "time",
+        "level",
+        "lat",
+        "lon"
+    ],
+    "long_name": "temperature",
+    "units": "celsius"
+}
