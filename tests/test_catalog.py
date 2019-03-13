@@ -19,3 +19,13 @@ def test_catalog(catalog1, dataset):
     assert ds.dims == dataset.dims
     assert np.all(ds.temp == dataset.temp)
     assert np.all(ds.rh == dataset.rh)
+
+
+def test_persist(catalog1):
+    from intake_xarray import ZarrSource
+    source = catalog1['blank']
+    s2 = source.persist()
+    assert source.has_been_persisted
+    assert isinstance(s2, ZarrSource)
+    assert s2.is_persisted
+    assert (source.read() == s2.read()).all()
