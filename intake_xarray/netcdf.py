@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
 from distutils.version import LooseVersion
-try:
-    import xarray as xr
-    XARRAY_VERSION = LooseVersion(xr.__version__)
-except ImportError:
-    XARRAY_VERSION = None
 from intake.source.base import PatternMixin
 from intake.source.utils import reverse_format
 from .base import DataSourceMixin
@@ -48,6 +43,11 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
         super(NetCDFSource, self).__init__(metadata=metadata)
 
     def _open_dataset(self):
+        try:
+            import xarray as xr
+            XARRAY_VERSION = LooseVersion(xr.__version__)
+        except ImportError:
+            XARRAY_VERSION = None
         if not XARRAY_VERSION:
             raise ImportError("xarray not available")
         url = self.urlpath
@@ -66,6 +66,13 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
     def _add_path_to_ds(self, ds):
         """Adding path info to a coord for a particular file
         """
+        try:
+            import xarray as xr
+            XARRAY_VERSION = LooseVersion(xr.__version__)
+        except ImportError:
+            XARRAY_VERSION = None
+        if not XARRAY_VERSION:
+            raise ImportError("xarray not available")
         if not (XARRAY_VERSION > '0.11.1'):
             raise ImportError("Your version of xarray is '{}'. "
                 "The insurance that source path is available on output of "

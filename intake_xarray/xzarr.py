@@ -1,5 +1,4 @@
 import xarray as xr
-from dask.bytes.core import get_fs, infer_options, update_storage_options
 from .base import DataSourceMixin
 
 
@@ -26,6 +25,8 @@ class ZarrSource(DataSourceMixin):
         self._ds = None
 
     def _open_dataset(self):
+        from dask.bytes.core import get_fs, infer_options, \
+            update_storage_options
         urlpath, protocol, options = infer_options(self.urlpath)
         update_storage_options(options, self.storage_options)
 

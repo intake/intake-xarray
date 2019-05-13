@@ -59,10 +59,13 @@ def test_read_list_of_netcdf_files():
 
 def test_read_glob_pattern_of_netcdf_files():
     """If xarray is old, prompt user to update to use pattern"""
-    from intake_xarray.netcdf import NetCDFSource, XARRAY_VERSION
+    from intake_xarray.netcdf import NetCDFSource
+    import xarray as xr
+    from distutils.version import LooseVersion
+
     source = NetCDFSource(os.path.join(here, 'data', 'example_{num: d}.nc'),
                           concat_dim='num')
-    if not (XARRAY_VERSION > '0.11.1'):
+    if not (LooseVersion(xr.__version__) > '0.11.1'):
         with pytest.raises(ImportError, match='open_dataset was added in 0.11.2'):
             source.to_dask()
     else:

@@ -1,4 +1,3 @@
-import xarray as xr
 import numpy as np
 from intake.source.base import PatternMixin
 from intake.source.utils import reverse_formats
@@ -53,6 +52,7 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
         super(RasterIOSource, self).__init__(metadata=metadata)
 
     def _open_files(self, files):
+        import xarray as xr
         das = [xr.open_rasterio(f, chunks=self.chunks, **self._kwargs)
                for f in files]
         out = xr.concat(das, dim=self.dim)
@@ -71,6 +71,7 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
         return out.assign_coords(**coords).chunk(self.chunks)
 
     def _open_dataset(self):
+        import xarray as xr
         if '*' in self.urlpath:
             files = sorted(glob.glob(self.urlpath))
             if len(files) == 0:
@@ -86,6 +87,7 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
         """Make schema object, which embeds xarray object and some details"""
         from .xarray_container import serialize_zarr_ds
         import msgpack
+        import xarray as xr
 
         self.urlpath, *_ = self._get_cache(self.urlpath)
 
