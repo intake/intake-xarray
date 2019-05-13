@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import xarray as xr
 from .base import DataSourceMixin
 
 import os
@@ -37,6 +36,7 @@ class OpenDapSource(DataSourceMixin):
             check_url=self.urlpath)
 
     def _open_dataset(self):
+        import xarray as xr
         session = self._get_session()
 
         store = xr.backends.PydapDataStore.open(self.urlpath, session=session)

@@ -34,3 +34,15 @@ def zarr_source():
         yield ZarrSource(tdir)
     finally:
         shutil.rmtree(tdir)
+
+
+@pytest.fixture
+def mock_import_xarray():
+    import sys
+    import xarray
+    try:
+        sys.modules['xarray'] = None
+        yield
+    finally:
+        sys.modules['xarray'] = xarray
+
