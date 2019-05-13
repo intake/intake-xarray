@@ -10,7 +10,7 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
 
     Parameters
     ----------
-    urlpath : str
+    urlpath : str, List[str]
         Path to source file. May include glob "*" characters, format
         pattern strings, or list.
         Some examples:
@@ -43,13 +43,7 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
         super(NetCDFSource, self).__init__(metadata=metadata)
 
     def _open_dataset(self):
-        try:
-            import xarray as xr
-            XARRAY_VERSION = LooseVersion(xr.__version__)
-        except ImportError:
-            XARRAY_VERSION = None
-        if not XARRAY_VERSION:
-            raise ImportError("xarray not available")
+        import xarray as xr
         url = self.urlpath
         kwargs = self._kwargs
         if "*" in url or isinstance(url, list):
@@ -66,13 +60,8 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
     def _add_path_to_ds(self, ds):
         """Adding path info to a coord for a particular file
         """
-        try:
-            import xarray as xr
-            XARRAY_VERSION = LooseVersion(xr.__version__)
-        except ImportError:
-            XARRAY_VERSION = None
-        if not XARRAY_VERSION:
-            raise ImportError("xarray not available")
+        import xarray as xr
+        XARRAY_VERSION = LooseVersion(xr.__version__)
         if not (XARRAY_VERSION > '0.11.1'):
             raise ImportError("Your version of xarray is '{}'. "
                 "The insurance that source path is available on output of "
