@@ -47,7 +47,7 @@ def get_mapper(protocol, fs, path):
     if protocol == 's3':
         from s3fs.mapping import S3Map
         return S3Map(path, fs)
-    elif protocol == 'gcs':
+    elif protocol in ['gs', 'gcs']:
         from gcsfs.mapping import GCSMap
         return GCSMap(path, fs)
     else:
