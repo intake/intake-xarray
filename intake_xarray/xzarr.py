@@ -1,4 +1,3 @@
-from fsspec import get_mapper
 from .base import DataSourceMixin
 
 
@@ -26,7 +25,7 @@ class ZarrSource(DataSourceMixin):
 
     def _open_dataset(self):
         import xarray as xr
-        from fsspec import filesystem
+        from fsspec import filesystem, get_mapper
         from fsspec.utils import update_storage_options, infer_storage_options
         storage_options = infer_storage_options(self.urlpath)
         update_storage_options(storage_options, self.storage_options)
