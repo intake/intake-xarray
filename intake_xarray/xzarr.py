@@ -26,13 +26,13 @@ class ZarrSource(DataSourceMixin):
 
     def _open_dataset(self):
         import xarray as xr
-        from fsspec.utils import update_storage_options
-        from dask.bytes.core import get_fs_token_paths, infer_storage_options
-        urlpath, protocol, options = infer_storage_options(self.urlpath)
-        update_storage_options(options, self.storage_options)
+        from fsspec import filesystem
+        from fsspec.utils import update_storage_options, infer_storage_options
+        storage_options = infer_storage_options(self.urlpath)
+        update_storage_options(storage_options, self.storage_options)
 
-        self._fs, _ = get_fs_token_paths(protocol, options)
-        if protocol != 'file':
+        self._fs = filesystem(storage_options['protocol'])
+        if storage_options['protocol'] != 'file':
             self._mapper = get_mapper(self.urlpath)
             self._ds = xr.open_zarr(self._mapper, **self.kwargs)
         else:
