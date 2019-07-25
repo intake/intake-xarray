@@ -11,3 +11,4 @@ dependencies:
   - rasterio
   - scikit-image
   - pynio
+  - fsspec

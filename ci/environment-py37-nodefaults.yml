@@ -11,3 +11,4 @@ dependencies:
   - netcdf4
   - rasterio
   - scikit-image
+  - fsspec
