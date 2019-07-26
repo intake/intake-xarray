@@ -22,6 +22,16 @@ setup(
     license='BSD',
     py_modules=['intake_xarray'],
     packages=find_packages(),
+    entry_points={
+        'intake.drivers': [
+            'netcdf = intake_xarray.netcdf:NetCDFSource',
+            'zarr = intake_xarray.xzarr:ZarrSource',
+            'opendap = intake_xarray.opendap:OpenDapSource',
+            'xarray_image = intake_xarray.image:ImageSource',
+            'rasterio = intake_xarray.raster:RasterIOSource',
+            'remote-xarray = intake_xarray.xarray_container:RemoteXarray',
+        ]
+    },
     package_data={'': ['*.csv', '*.yml', '*.html']},
     include_package_data=True,
     install_requires=INSTALL_REQUIRES,
