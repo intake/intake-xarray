@@ -135,8 +135,12 @@ class RemoteXarray(RemoteSource):
 
                     for part in itertools.product(*nparts)
                 }
-                self._ds[var].data = da.Array(dask, name, chunks,
-                                              arr.dtype, arr.shape)
+                self._ds[var].data = da.Array(
+                    dask,
+                    name,
+                    chunks,
+                    dtype=arr.dtype,
+                    shape=arr.shape)
             if self.metadata.get('array', False):
                 self._ds = self._ds[self.metadata.get('array')]
         return self._schema
