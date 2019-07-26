@@ -41,6 +41,7 @@ def test_remote_netcdf(intake_server):
     assert source._schema is None
     source._get_schema()
     assert source._schema is not None
+    repr(source.to_dask())
     assert (source.to_dask().rh.data.compute() ==
             cat_local.xarray_source.to_dask().rh.data.compute()).all()
     assert (source.read() ==
@@ -57,6 +58,7 @@ def test_remote_tiff(intake_server):
     assert source._schema is None
     source._get_schema()
     assert source._schema is not None
+    repr(source.to_dask())
     remote = source.to_dask().data.compute()
     local = cat_local.tiff_source.to_dask().data.compute()
     assert (remote == local).all()
