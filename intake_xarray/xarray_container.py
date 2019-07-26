@@ -96,7 +96,6 @@ class RemoteXarray(RemoteSource):
         this method fetches coordinates data and creates dask arrays.
         """
         import dask.array as da
-        from dask.array.utils import meta_from_array
         if self._schema is None:
             metadata = {
                 'dims': dict(self._ds.dims),
@@ -140,9 +139,8 @@ class RemoteXarray(RemoteSource):
                     dask,
                     name,
                     chunks,
-                    arr.dtype,
-                    meta_from_array(arr),
-                    arr.shape)
+                    dtype=arr.dtype,
+                    shape=arr.shape)
             if self.metadata.get('array', False):
                 self._ds = self._ds[self.metadata.get('array')]
         return self._schema
