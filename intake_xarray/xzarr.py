@@ -25,11 +25,13 @@ class ZarrSource(DataSourceMixin):
 
     def _open_dataset(self):
         import xarray as xr
+        import fsspec
+        assert fsspec.__version__ >= "0.3.6", "zarr plugin requires fsspec >= 0.3.6"
         from fsspec import filesystem, get_mapper
         from fsspec.utils import update_storage_options, infer_storage_options
+
         storage_options = infer_storage_options(self.urlpath)
         update_storage_options(storage_options, self.storage_options)
-
         self._fs = filesystem(storage_options['protocol'])
         if storage_options['protocol'] != 'file':
             self._mapper = get_mapper(self.urlpath)
