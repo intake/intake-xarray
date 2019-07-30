@@ -5,10 +5,10 @@ dependencies:
   - python=2.7
   - intake>=0.4.1
   - xarray>=0.11.2
+  - fsspec>=0.3.6
   - zarr
   - pytest
   - netcdf4
   - rasterio
   - scikit-image
   - pynio
-  - fsspec

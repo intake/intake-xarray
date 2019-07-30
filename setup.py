@@ -9,7 +9,7 @@
 from setuptools import setup, find_packages
 import versioneer
 
-INSTALL_REQUIRES = ['intake >=0.4.1', 'xarray >=0.11.0', 'zarr', 'dask', 'netcdf4', 'fsspec']
+INSTALL_REQUIRES = ['intake >=0.4.1', 'xarray >=0.11.0', 'fsspec >=0.3.6', 'zarr', 'dask', 'netcdf4']
 
 setup(
     name='intake-xarray',

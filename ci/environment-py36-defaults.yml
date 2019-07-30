@@ -3,9 +3,9 @@ dependencies:
   - python=3.6
   - intake
   - xarray
+  - fsspec
   - zarr
   - pytest
   - netcdf4
   - rasterio
   - scikit-image
-  - fsspec

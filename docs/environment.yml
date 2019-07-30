@@ -6,6 +6,7 @@ dependencies:
   - python=3.6
   - intake
   - intake-xarray
+  - fsspec
   - pip:
     - sphinx
     - sphinx-rtd-theme

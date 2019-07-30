@@ -2,7 +2,7 @@
 set -e # exit on error
 
 echo "Installing dependencies."
-conda install -c conda-forge conda-build conda-verify anaconda-client jinja2 intake>=0.4.1 xarray>=0.11.0 zarr dask netcdf4 fsspec
+conda install -c conda-forge conda-build conda-verify anaconda-client jinja2 intake>=0.4.1 xarray>=0.11.0 fsspec>=0.3.6 zarr dask netcdf4
 conda list
 
 echo "Building conda package."
