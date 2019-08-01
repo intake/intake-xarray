@@ -19,36 +19,18 @@ class ZarrSource(DataSourceMixin):
     def __init__(self, urlpath, storage_options=None, metadata=None, **kwargs):
         super(ZarrSource, self).__init__(metadata=metadata)
         self.urlpath = urlpath
-        self.storage_options = storage_options
+        self.storage_options = storage_options or {}
         self.kwargs = kwargs
         self._ds = None
 
     def _open_dataset(self):
         import xarray as xr
-        from dask.bytes.core import get_fs, infer_options, \
-            update_storage_options
-        urlpath, protocol, options = infer_options(self.urlpath)
-        update_storage_options(options, self.storage_options)
+        from fsspec import get_mapper
 
-        self._fs, _ = get_fs(protocol, options)
-        if protocol != 'file':
-            self._mapper = get_mapper(protocol, self._fs, urlpath)
-            self._ds = xr.open_zarr(self._mapper, **self.kwargs)
-        else:
-            self._ds = xr.open_zarr(self.urlpath, **self.kwargs)
+        self._mapper = get_mapper(self.urlpath, **self.storage_options)
+        self._ds = xr.open_zarr(self._mapper, **self.kwargs)
 
     def close(self):
         super(ZarrSource, self).close()
         self._fs = None
         self._mapper = None
-
-
-def get_mapper(protocol, fs, path):
-    if protocol == 's3':
-        from s3fs.mapping import S3Map
-        return S3Map(path, fs)
-    elif protocol == 'gcs':
-        from gcsfs.mapping import GCSMap
-        return GCSMap(path, fs)
-    else:
-        raise NotImplementedError

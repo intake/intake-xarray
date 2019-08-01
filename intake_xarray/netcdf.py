@@ -38,9 +38,9 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
         self.urlpath = urlpath
         self.chunks = chunks
         self.concat_dim = concat_dim
-        self._kwargs = xarray_kwargs or kwargs
+        self._kwargs = xarray_kwargs or {}
         self._ds = None
-        super(NetCDFSource, self).__init__(metadata=metadata)
+        super(NetCDFSource, self).__init__(metadata=metadata, **kwargs)
 
     def _open_dataset(self):
         import xarray as xr
