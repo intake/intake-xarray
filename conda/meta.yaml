@@ -26,8 +26,6 @@ requirements:
     {% endfor %}
 
 test:
-  source_files:
-    - tests
   requires:
     - pytest
   commands:
