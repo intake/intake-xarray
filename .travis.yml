@@ -11,11 +11,9 @@ matrix:
   fast_finish: true
   include:
     - env: CONDA_ENV=py36
-    - env: CONDA_ENV=py27
     - env: CONDA_ENV=py36-defaults
     - env: CONDA_ENV=py37-nodefaults
   allow_failures:
-    - env: CONDA_ENV=py27
     - env: CONDA_ENV=py36-defaults
     - env: CONDA_ENV=py37-nodefaults
 

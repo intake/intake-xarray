@@ -1,7 +1,7 @@
 name: test_env
 channels:
   - conda-forge
-  - nodefaults
+  - defaults
 dependencies:
   - python=3.7
   - intake>=0.4.1
