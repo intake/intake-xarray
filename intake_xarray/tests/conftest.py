@@ -9,9 +9,11 @@ import xarray as xr
 from intake_xarray.netcdf import NetCDFSource
 from intake_xarray.xzarr import ZarrSource
 
-TEST_DATA_DIR = 'tests/data'
+TEST_DATA_DIR = 'data'
 TEST_DATA = 'example_1.nc'
-TEST_URLPATH = posixpath.join(TEST_DATA_DIR, TEST_DATA)
+
+here = posixpath.dirname(__file__)
+TEST_URLPATH = posixpath.join(here, TEST_DATA_DIR, TEST_DATA)
 
 
 @pytest.fixture
@@ -45,4 +47,3 @@ def mock_import_xarray():
         yield
     finally:
         sys.modules['xarray'] = xarray
-

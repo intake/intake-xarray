@@ -1,5 +1,7 @@
 recursive-include . *.html
 recursive-include . *.csv
 recursive-include . *.yml
+
 include versioneer.py
 include intake_xarray/_version.py
+include LICENSE
