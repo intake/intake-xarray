@@ -52,6 +52,8 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
                 kwargs.update(concat_dim=self.concat_dim)
             if self.pattern:
                 kwargs.update(preprocess=self._add_path_to_ds)
+            if 'combine' not in kwargs.keys():
+                kwargs.update(combine='nested')
         else:
             _open_dataset = xr.open_dataset
 
