@@ -96,3 +96,10 @@ sources:
     driver: zarr
     args:
       urlpath: "{{CATALOG_DIR}}/blank.zarr"
+  opendap_source:
+    description: example OPeNDAP source
+    driver: opendap
+    args:
+      urlpath: http://test.opendap.org/opendap/hyrax/data/nc/data.nc
+      chunks: {}
+      auth: null

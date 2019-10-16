@@ -303,3 +303,13 @@ def test_read_jpg_image():
     im = ImageSource(os.path.join(here, 'data', 'dog.jpg'))
     da = im.read()
     assert da.shape == (192, 192)
+
+
+def test_read_opendap_no_auth():
+    pytest.importorskip("pydap")
+    cat = intake.open_catalog(os.path.join(here, "data", "catalog.yaml"))
+    source = cat.opendap_source
+    info = source.discover()
+    assert info["metadata"]["dims"] == {"TIME": 12}
+    x = source.read()
+    assert x.TIME.shape == (12,)
