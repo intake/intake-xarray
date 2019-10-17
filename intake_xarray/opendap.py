@@ -45,7 +45,8 @@ class OpenDapSource(DataSourceMixin):
                 from pydap.cas.urs import setup_session
             else:
                 raise ValueError(
-                    f"Authentication method should either be 'esgf' or 'urs', got {auth} instead."
+                    "Authentication method should either be None, 'esgf' or 'urs', "
+                    f"got '{self.auth}' instead."
                 )
             username = os.getenv('DAP_USER', None)
             password = os.getenv('DAP_PASSWORD', None)

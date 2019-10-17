@@ -334,3 +334,12 @@ def test_read_opendap_with_auth(auth):
         mock_setup_session.assert_called_once_with(
             os.environ["DAP_USER"], os.environ["DAP_PASSWORD"], check_url=urlpath
         )
+
+
+def test_read_opendap_invalid_auth():
+    pytest.importorskip("pydap")
+    from intake_xarray.opendap import OpenDapSource
+
+    source = OpenDapSource(urlpath="https://test.url", chunks={}, auth="abcd")
+    with pytest.raises(ValueError):
+        source.discover()
