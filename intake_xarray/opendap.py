@@ -21,6 +21,8 @@ class OpenDapSource(DataSourceMixin):
         'esgf' - [Default] Earth System Grid Federation.
         'urs' - NASA Earthdata Login, also known as URS.
         None - No authentication.
+        Note that you will need to set your username and password respectively using the
+        environment variables DAP_USER and DAP_PASSWORD.
     """
     name = 'opendap'
 

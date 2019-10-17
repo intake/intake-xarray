@@ -6,6 +6,5 @@ dependencies:
   - zarr
   - pytest
   - netcdf4
-  - pydap
   - rasterio
   - scikit-image
