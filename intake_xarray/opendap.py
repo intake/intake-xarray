@@ -15,25 +15,44 @@ class OpenDapSource(DataSourceMixin):
         Chunks is used to load the new dataset into dask
         arrays. ``chunks={}`` loads the dataset with dask using a single
         chunk for all arrays.
+    auth: None, "esgf" or "urs"
+        Method of authenticating to the OPeNDAP server.
+        Choose from one of the following:
+        'esgf' - [Default] Earth System Grid Federation.
+        'urs' - NASA Earthdata Login, also known as URS.
+        None - No authentication.
+        Note that you will need to set your username and password respectively using the
+        environment variables DAP_USER and DAP_PASSWORD.
     """
     name = 'opendap'
 
-    def __init__(self, urlpath, chunks, xarray_kwargs=None, metadata=None,
+    def __init__(self, urlpath, chunks, auth="esgf", xarray_kwargs=None, metadata=None,
                  **kwargs):
         self.urlpath = urlpath
         self.chunks = chunks
+        self.auth = auth
         self._kwargs = xarray_kwargs or kwargs
         self._ds = None
         super(OpenDapSource, self).__init__(metadata=metadata)
 
     def _get_session(self):
-        from pydap.cas.esgf import setup_session
-        username = os.getenv('DAP_USER', None)
-        password = os.getenv('DAP_PASSWORD', None)
-        return setup_session(
-            username,
-            password,
-            check_url=self.urlpath)
+        if self.auth is None:
+            session = None
+        else:
+            if self.auth == "esgf":
+                from pydap.cas.esgf import setup_session
+            elif self.auth == "urs":
+                from pydap.cas.urs import setup_session
+            else:
+                raise ValueError(
+                    "Authentication method should either be None, 'esgf' or 'urs', "
+                    f"got '{self.auth}' instead."
+                )
+            username = os.getenv('DAP_USER', None)
+            password = os.getenv('DAP_PASSWORD', None)
+            session = setup_session(username, password, check_url=self.urlpath)
+
+        return session
 
     def _open_dataset(self):
         import xarray as xr

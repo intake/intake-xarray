@@ -11,6 +11,7 @@ data drivers included in this package.
 In `intake-xarray`, there are plugins provided for reading data into [xarray](http://xarray.pydata.org/en/stable/) 
 containers:
   - NetCDF
+  - OPeNDAP
   - Rasterio
   - Zarr
   - images
@@ -28,5 +29,5 @@ conda install -c conda-forge intake-xarray
 To install optional dependencies:
 
 ```
-conda install -c conda-forge rasterio
+conda install -c conda-forge pydap rasterio
 ```

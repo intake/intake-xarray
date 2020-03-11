@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 
@@ -303,3 +305,41 @@ def test_read_jpg_image():
     im = ImageSource(os.path.join(here, 'data', 'dog.jpg'))
     da = im.read()
     assert da.shape == (192, 192)
+
+
+def test_read_opendap_no_auth():
+    pytest.importorskip("pydap")
+    cat = intake.open_catalog(os.path.join(here, "data", "catalog.yaml"))
+    source = cat.opendap_source
+    info = source.discover()
+    assert info["metadata"]["dims"] == {"TIME": 12}
+    x = source.read()
+    assert x.TIME.shape == (12,)
+
+
+@pytest.mark.parametrize("auth", ["esgf", "urs"])
+def test_read_opendap_with_auth(auth):
+    pytest.importorskip("pydap")
+    from intake_xarray.opendap import OpenDapSource
+
+    os.environ["DAP_USER"] = "username"
+    os.environ["DAP_PASSWORD"] = "password"
+    urlpath = "http://test.opendap.org/opendap/hyrax/data/nc/123.nc"
+
+    with patch(
+        f"pydap.cas.{auth}.setup_session", return_value=None
+    ) as mock_setup_session:
+        source = OpenDapSource(urlpath=urlpath, chunks={}, auth=auth)
+        source.discover()
+        mock_setup_session.assert_called_once_with(
+            os.environ["DAP_USER"], os.environ["DAP_PASSWORD"], check_url=urlpath
+        )
+
+
+def test_read_opendap_invalid_auth():
+    pytest.importorskip("pydap")
+    from intake_xarray.opendap import OpenDapSource
+
+    source = OpenDapSource(urlpath="https://test.url", chunks={}, auth="abcd")
+    with pytest.raises(ValueError):
+        source.discover()
