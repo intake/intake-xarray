@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import fsspec
 from distutils.version import LooseVersion
 from intake.source.base import PatternMixin
 from intake.source.utils import reverse_format
@@ -28,16 +29,20 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
         Whether to treat the path as a pattern (ie. ``data_{field}.nc``)
         and create new coodinates in the output corresponding to pattern
         fields. If str, is treated as pattern to match on. Default is True.
+    storage_options: dict
+        If using a remote fs (whether caching locally or not), these are
+        the kwargs to pass to that FS.
     """
     name = 'netcdf'
 
     def __init__(self, urlpath, chunks=None, concat_dim='concat_dim',
                  xarray_kwargs=None, metadata=None,
-                 path_as_pattern=True, **kwargs):
+                 path_as_pattern=True, storage_options=None, **kwargs):
         self.path_as_pattern = path_as_pattern
         self.urlpath = urlpath
         self.chunks = chunks
         self.concat_dim = concat_dim
+        self.storage_options = storage_options or {}
         self._kwargs = xarray_kwargs or {}
         self._ds = None
         super(NetCDFSource, self).__init__(metadata=metadata, **kwargs)
@@ -56,6 +61,7 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
                 kwargs.update(combine='nested')
         else:
             _open_dataset = xr.open_dataset
+        url = fsspec.open_local(url, **self.storage_options)
 
         self._ds = _open_dataset(url, chunks=self.chunks, **kwargs)
 

@@ -1,4 +1,5 @@
 import numpy as np
+import fsspec
 from intake.source.base import PatternMixin
 from intake.source.utils import reverse_formats
 from .base import DataSourceMixin, Schema
@@ -42,11 +43,12 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
 
     def __init__(self, urlpath, chunks, concat_dim='concat_dim',
                  xarray_kwargs=None, metadata=None, path_as_pattern=True,
-                 **kwargs):
+                 storage_options=None, **kwargs):
         self.path_as_pattern = path_as_pattern
         self.urlpath = urlpath
         self.chunks = chunks
         self.dim = concat_dim
+        self.storage_options = storage_options
         self._kwargs = xarray_kwargs or {}
         self._ds = None
         super(RasterIOSource, self).__init__(metadata=metadata)
@@ -72,15 +74,11 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
 
     def _open_dataset(self):
         import xarray as xr
-        if '*' in self.urlpath:
-            files = sorted(glob.glob(self.urlpath))
-            if len(files) == 0:
-                raise Exception("No files found at {}".format(self.urlpath))
+        files = fsspec.open_local(self.urlpath, **self.storage_options)
+        if isinstance(self.urlpath, list):
             self._ds = self._open_files(files)
-        elif isinstance(self.urlpath, list):
-            self._ds = self._open_files(self.urlpath)
         else:
-            self._ds = xr.open_rasterio(self.urlpath, chunks=self.chunks,
+            self._ds = xr.open_rasterio(files, chunks=self.chunks,
                                         **self._kwargs)
 
     def _get_schema(self):
