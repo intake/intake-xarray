@@ -48,7 +48,7 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
         self.urlpath = urlpath
         self.chunks = chunks
         self.dim = concat_dim
-        self.storage_options = storage_options
+        self.storage_options = storage_options or {}
         self._kwargs = xarray_kwargs or {}
         self._ds = None
         super(RasterIOSource, self).__init__(metadata=metadata)
