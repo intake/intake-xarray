@@ -72,8 +72,6 @@ def test_cached_list_netcdf():
     d = source.to_dask()
     assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 1,
                       'concat_dim': 2}
-    import pdb
-    pdb.set_trace()
     assert os.listdir(tempd)
 
 
