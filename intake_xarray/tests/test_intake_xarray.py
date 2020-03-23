@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 from unittest.mock import patch
+import tempfile
 
 import numpy as np
 import pytest
@@ -57,6 +58,23 @@ def test_read_list_of_netcdf_files():
     d = source.to_dask()
     assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 1,
                       'concat_dim': 2}
+
+
+def test_cached_list_netcdf():
+    tempd = str(tempfile.mkdtemp())
+    from intake_xarray.netcdf import NetCDFSource
+    source = NetCDFSource([
+        'filecache://' + os.path.join(here, 'data', 'example_1.nc'),
+        'filecache://' + os.path.join(here, 'data', 'example_2.nc'),
+        ],
+        storage_options={'cache_storage': tempd, 'target_protocol': 'file'}
+    )
+    d = source.to_dask()
+    assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 1,
+                      'concat_dim': 2}
+    import pdb
+    pdb.set_trace()
+    assert os.listdir(tempd)
 
 
 def test_read_glob_pattern_of_netcdf_files():
