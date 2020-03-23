@@ -78,7 +78,7 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
         if isinstance(self.urlpath, list):
             self._ds = self._open_files(files)
         else:
-            self._ds = xr.open_rasterio(files, chunks=self.chunks,
+            self._ds = xr.open_rasterio(files[0], chunks=self.chunks,
                                         **self._kwargs)
 
     def _get_schema(self):
