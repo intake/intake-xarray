@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e # exit on error
+set -x
 
 echo "Creating test env"
 conda env create -n test_env --file ci/environment-${CONDA_ENV}.yml
