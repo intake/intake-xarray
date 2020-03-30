@@ -5,10 +5,11 @@ channels:
 dependencies:
   - python=3.7
   - intake>=0.4.1
-  - xarray=0.11.0  # pinnned this low as a test
+  - xarray
   - zarr
   - pytest
   - netcdf4
+  - pip
   - pydap
   - rasterio
   - scikit-image
