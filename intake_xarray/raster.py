@@ -75,10 +75,10 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
     def _open_dataset(self):
         import xarray as xr
         files = fsspec.open_local(self.urlpath, **self.storage_options)
-        if isinstance(self.urlpath, list) or len(files) > 1:
+        if isinstance(files, list):
             self._ds = self._open_files(files)
         else:
-            self._ds = xr.open_rasterio(files[0], chunks=self.chunks,
+            self._ds = xr.open_rasterio(files, chunks=self.chunks,
                                         **self._kwargs)
 
     def _get_schema(self):
