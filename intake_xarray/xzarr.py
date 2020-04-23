@@ -16,19 +16,32 @@ class ZarrSource(DataSourceMixin):
     """
     name = 'zarr'
 
-    def __init__(self, urlpath, storage_options=None, metadata=None, **kwargs):
-        super(ZarrSource, self).__init__(metadata=metadata)
+    def __init__(self, urlpath, chunks=None, concat_dim='concat_dim',
+                 xarray_kwargs=None, storage_options=None, metadata=None,
+                 **kwargs):
+        super(ZarrSource, self).__init__(metadata=metadata, **kwargs)
         self.urlpath = urlpath
+        self.chunks = chunks
+        self.concat_dim = concat_dim
         self.storage_options = storage_options or {}
-        self.kwargs = kwargs
+        self._kwargs = xarray_kwargs or {}
         self._ds = None
 
     def _open_dataset(self):
         import xarray as xr
         from fsspec import get_mapper
-
+        url = self.urlpath
+        kwargs = self._kwargs
+        if "*" in url or isinstance(url, list):
+            _open_zarr = xr.open_mzarr
+            if 'concat_dim' not in kwargs.keys():
+                kwargs.update(concat_dim=self.concat_dim)
+            if 'combine' not in kwargs.keys():
+                kwargs.update(combine='nested')
+        else:
+            _open_zarr = xr.open_zarr
         self._mapper = get_mapper(self.urlpath, **self.storage_options)
-        self._ds = xr.open_zarr(self._mapper, **self.kwargs)
+        self._ds = _open_zarr(self._mapper, **self.kwargs)
 
     def close(self):
         super(ZarrSource, self).close()
