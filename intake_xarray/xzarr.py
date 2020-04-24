@@ -1,7 +1,8 @@
 from .base import DataSourceMixin
+from intake.source.base import PatternMixin
 
 
-class ZarrSource(DataSourceMixin):
+class ZarrSource(DataSourceMixin, PatternMixin):
     """Open a xarray dataset.
 
     Parameters
@@ -17,15 +18,17 @@ class ZarrSource(DataSourceMixin):
     name = 'zarr'
 
     def __init__(self, urlpath, chunks=None, concat_dim='concat_dim',
-                 xarray_kwargs=None, storage_options=None, metadata=None,
+                 xarray_kwargs=None, path_as_pattern=True,
+                 storage_options=None, metadata=None,
                  **kwargs):
-        super(ZarrSource, self).__init__(metadata=metadata, **kwargs)
+        self.path_as_pattern = path_as_pattern
         self.urlpath = urlpath
         self.chunks = chunks
         self.concat_dim = concat_dim
         self.storage_options = storage_options or {}
         self._kwargs = xarray_kwargs or {}
         self._ds = None
+        super(ZarrSource, self).__init__(metadata=metadata, **kwargs)
 
     def _open_dataset(self):
         import xarray as xr
@@ -37,6 +40,7 @@ class ZarrSource(DataSourceMixin):
             if 'concat_dim' not in kwargs.keys():
                 kwargs.update(concat_dim=self.concat_dim)
             if 'combine' not in kwargs.keys():
+                print('here')
                 kwargs.update(combine='nested')
             import fsspec
             url = fsspec.open_local(url, **self.storage_options)
