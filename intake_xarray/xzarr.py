@@ -42,7 +42,7 @@ class ZarrSource(DataSourceMixin, PatternMixin):
             if 'combine' not in kwargs.keys():
                 print('here')
                 kwargs.update(combine='nested')
-            self._mapper = glob(url)
+            self._mapper = url
         else:
             _open_zarr = xr.open_zarr
             self._mapper = get_mapper(self.urlpath, **self.storage_options)
