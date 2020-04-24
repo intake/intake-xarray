@@ -38,10 +38,13 @@ class ZarrSource(DataSourceMixin):
                 kwargs.update(concat_dim=self.concat_dim)
             if 'combine' not in kwargs.keys():
                 kwargs.update(combine='nested')
+            import fsspec
+            url = fsspec.open_local(url, **self.storage_options)
+            self._ds = _open_zarr(url, chunks=self.chunks, **kwargs)
         else:
             _open_zarr = xr.open_zarr
-        self._mapper = get_mapper(self.urlpath, **self.storage_options)
-        self._ds = _open_zarr(self._mapper, chunks=self.chunks, **kwargs)
+            self._mapper = get_mapper(self.urlpath, **self.storage_options)
+            self._ds = _open_zarr(self._mapper, chunks=self.chunks, **kwargs)
 
     def close(self):
         super(ZarrSource, self).close()
