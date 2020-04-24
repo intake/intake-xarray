@@ -1,8 +1,7 @@
 from .base import DataSourceMixin
-from intake.source.base import PatternMixin
-from glob import glob
 
-class ZarrSource(DataSourceMixin, PatternMixin):
+
+class ZarrSource(DataSourceMixin):
     """Open a xarray dataset.
 
     Parameters
@@ -18,10 +17,8 @@ class ZarrSource(DataSourceMixin, PatternMixin):
     name = 'zarr'
 
     def __init__(self, urlpath, chunks=None, concat_dim='concat_dim',
-                 xarray_kwargs=None, path_as_pattern=True,
-                 storage_options=None, metadata=None,
+                 xarray_kwargs=None, storage_options=None, metadata=None,
                  **kwargs):
-        self.path_as_pattern = path_as_pattern
         self.urlpath = urlpath
         self.chunks = chunks
         self.concat_dim = concat_dim
