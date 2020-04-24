@@ -39,6 +39,8 @@ class ZarrSource(DataSourceMixin):
             if 'combine' not in kwargs.keys():
                 print('here')
                 kwargs.update(combine='nested')
+            # get_mapper does not recognize glob-like paths, but
+            # it works just to simply pass the path directly to xarray
             self._mapper = url
         else:
             _open_zarr = xr.open_zarr
