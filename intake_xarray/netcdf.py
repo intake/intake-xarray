@@ -22,9 +22,10 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
         Chunks is used to load the new dataset into dask
         arrays. ``chunks={}`` loads the dataset with dask using a single
         chunk for all arrays.
-    concat_dim : str, optional
-        Name of dimension along which to concatenate the files. Can
-        be new or pre-existing. Default is 'concat_dim'.
+    combine : ({'by_coords', 'nested'}, optional)
+        Which function is used to concatenate all the files when urlpath has a wildcard. It is recommended to set this argument in all
+        your catalogs because the default has changed and is going to change. It was "nested", and is now the default of xarray.open_mfdataset which is "auto_combine"
+        is planed to change from "auto" to "by_corrds" in a near future.
     path_as_pattern : bool or str, optional
         Whether to treat the path as a pattern (ie. ``data_{field}.nc``)
         and create new coodinates in the output corresponding to pattern
@@ -35,30 +36,37 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
     """
     name = 'netcdf'
 
-    def __init__(self, urlpath, chunks=None, concat_dim='concat_dim',
+    def __init__(self, urlpath, chunks=None, combine=None, concat_dim=None,
                  xarray_kwargs=None, metadata=None,
                  path_as_pattern=True, storage_options=None, **kwargs):
         self.path_as_pattern = path_as_pattern
         self.urlpath = urlpath
         self.chunks = chunks
         self.concat_dim = concat_dim
+        self.combine = combine
         self.storage_options = storage_options or {}
-        self._kwargs = xarray_kwargs or {}
+        self.xarray_kwargs = xarray_kwargs or {}
         self._ds = None
         super(NetCDFSource, self).__init__(metadata=metadata, **kwargs)
 
     def _open_dataset(self):
         import xarray as xr
         url = self.urlpath
-        kwargs = self._kwargs
+
+        kwargs = self.xarray_kwargs
+
         if "*" in url or isinstance(url, list):
             _open_dataset = xr.open_mfdataset
-            if 'concat_dim' not in kwargs.keys():
-                kwargs.update(concat_dim=self.concat_dim)
             if self.pattern:
                 kwargs.update(preprocess=self._add_path_to_ds)
-            if 'combine' not in kwargs.keys():
-                kwargs.update(combine='nested')
+            if self.combine is not None:
+                if 'combine' in kwargs:
+                    raise Exception("Setting 'combine' argument twice  in the catalog is invalid")
+                kwargs.update(combine=self.combine)
+            if self.concat_dim is not None:
+                if 'concat_dim' in kwargs:
+                    raise Exception("Setting 'concat_dim' argument twice  in the catalog is invalid")
+                kwargs.update(concat_dim=self.concat_dim)
         else:
             _open_dataset = xr.open_dataset
         url = fsspec.open_local(url, **self.storage_options)
