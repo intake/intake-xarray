@@ -33,7 +33,7 @@ class ZarrSource(DataSourceMixin):
         url = self.urlpath
         kwargs = self._kwargs
         if "*" in url or isinstance(url, list):
-            _open_zarr = xr.open_mzarr
+            _open_zarr = xr.open_mfdataset
             if 'concat_dim' not in kwargs.keys():
                 kwargs.update(concat_dim=self.concat_dim)
             if 'combine' not in kwargs.keys():
