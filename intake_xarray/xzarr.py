@@ -31,9 +31,8 @@ class ZarrSource(DataSourceMixin):
         import xarray as xr
         from fsspec import get_mapper
         kwargs = self._kwargs
-        _open_zarr = xr._open_dataset
         self._mapper = get_mapper(self.urlpath, **self.storage_options)
-        self._ds = _open_zarr(self._mapper, chunks=self.chunks, engine=name, **kwargs)
+        self._ds = xr.open_dataset(self._mapper, chunks=self.chunks, engine=name, **kwargs)
 
     def close(self):
         super(ZarrSource, self).close()
