@@ -49,7 +49,7 @@ def test_read_partition_netcdf(netcdf_source):
     assert np.all(out == expected)
 
 
-def test_read_list_of_netcdf_files():
+def test_read_list_of_netcdf_files_with_combine_nested():
     from intake_xarray.netcdf import NetCDFSource
     source = NetCDFSource([
         os.path.join(here, 'data', 'example_1.nc'),
@@ -63,12 +63,25 @@ def test_read_list_of_netcdf_files():
                       'concat_dim': 2}
 
 
+def test_read_list_of_netcdf_files_with_combine_by_coords():
+    from intake_xarray.netcdf import NetCDFSource
+    source = NetCDFSource([
+        os.path.join(here, 'data', 'example_1.nc'),
+        os.path.join(here, 'data', 'next_example_1.nc'),
+    ],
+        combine='by_coords',
+    )
+    d = source.to_dask()
+    assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 2}
+
+
 def test_read_glob_pattern_of_netcdf_files():
     """If xarray is old, prompt user to update to use pattern"""
     from intake_xarray.netcdf import NetCDFSource
     source = NetCDFSource(os.path.join(here, 'data', 'example_{num: d}.nc'),
                           concat_dim='num', combine='nested')
     d = source.to_dask()
+    print(d.dims)
     assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 1,
                       'num': 2}
     assert (d.num.data == np.array([1, 2])).all()
