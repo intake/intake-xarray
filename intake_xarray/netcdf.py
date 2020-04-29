@@ -23,9 +23,16 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
         arrays. ``chunks={}`` loads the dataset with dask using a single
         chunk for all arrays.
     combine : ({'by_coords', 'nested'}, optional)
-        Which function is used to concatenate all the files when urlpath has a wildcard. It is recommended to set this argument in all
-        your catalogs because the default has changed and is going to change. It was "nested", and is now the default of xarray.open_mfdataset which is "auto_combine"
-        is planed to change from "auto" to "by_corrds" in a near future.
+        Which function is used to concatenate all the files when urlpath
+        has a wildcard. It is recommended to set this argument in all
+        your catalogs because the default has changed and is going to change.
+        It was "nested", and is now the default of xarray.open_mfdataset
+        which is "auto_combine", and is planed to change from "auto" to
+        "by_corrds" in a near future.
+    concat_dim : str, optional
+        Name of dimension along which to concatenate the files. Can
+        be new or pre-existing if combine is "nested". Must be None or new if
+        combine is "by_coords".
     path_as_pattern : bool or str, optional
         Whether to treat the path as a pattern (ie. ``data_{field}.nc``)
         and create new coodinates in the output corresponding to pattern
