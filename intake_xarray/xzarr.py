@@ -16,7 +16,7 @@ class ZarrSource(DataSourceMixin):
     """
     name = 'zarr'
 
-    def __init__(self, urlpath, chunks=None, concat_dim='concat_dim',
+    def __init__(self, urlpath, chunks="auto", concat_dim='concat_dim',
                  xarray_kwargs=None, storage_options=None, metadata=None,
                  **kwargs):
         self.urlpath = urlpath
