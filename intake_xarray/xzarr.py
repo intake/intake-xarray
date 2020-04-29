@@ -30,21 +30,9 @@ class ZarrSource(DataSourceMixin):
     def _open_dataset(self):
         import xarray as xr
         from fsspec import get_mapper
-        url = self.urlpath
         kwargs = self._kwargs
-        if "*" in url or isinstance(url, list):
-            _open_zarr = xr.open_mfdataset
-            if 'concat_dim' not in kwargs.keys():
-                kwargs.update(concat_dim=self.concat_dim)
-            if 'combine' not in kwargs.keys():
-                print('here')
-                kwargs.update(combine='nested')
-            # get_mapper does not recognize glob-like paths, but
-            # it works just to simply pass the path directly to xarray
-            self._mapper = url
-        else:
-            _open_zarr = xr.open_zarr
-            self._mapper = get_mapper(self.urlpath, **self.storage_options)
+        _open_zarr = xr._open_dataset
+        self._mapper = get_mapper(self.urlpath, **self.storage_options)
         self._ds = _open_zarr(self._mapper, chunks=self.chunks, **kwargs)
 
     def close(self):
