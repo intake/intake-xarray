@@ -16,6 +16,7 @@ sources:
       engine: pynio
       chunks:
         lv_ISBL0: 2
+      combine: nested
       concat_dim: fileno
   tiff_source:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/RGB.byte.tif"
