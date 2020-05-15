@@ -31,7 +31,7 @@ class ZarrSource(DataSourceMixin):
         import xarray as xr
         from fsspec import get_mapper
         kwargs = self._kwargs
-        if "*" in self.url or isinstance(self.urlpath, list):
+        if "*" in self.urlpath or isinstance(self.urlpath, list):
             _open_dataset = xr.open_mfdataset
             self._mapper = self.urlpath
             if 'concat_dim' not in kwargs.keys():
