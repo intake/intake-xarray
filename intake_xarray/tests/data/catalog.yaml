@@ -13,7 +13,8 @@ sources:
     driver: netcdf
     args:
       urlpath: '{{ CATALOG_DIR }}/waf*.grib2'
-      engine: pynio
+      xarray_kwargs:
+        engine: pynio
       chunks:
         lv_ISBL0: 2
       combine: nested
