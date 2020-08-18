@@ -1,7 +1,18 @@
 # -*- coding: utf-8 -*-
 from .base import DataSourceMixin
 
+import requests
 import os
+
+
+def _create_generic_http_auth_session(username, password, check_url=None):
+    if username is None or password is None:
+        raise Exception("To use HTTP auth with the OPeNDAP driver you "
+                        "need to set the DAP_USER and DAP_PASSWORD "
+                        "environment variables")
+    session = requests.Session()
+    session.auth = (username, password)
+    return session
 
 
 class OpenDapSource(DataSourceMixin):
@@ -20,6 +31,7 @@ class OpenDapSource(DataSourceMixin):
         Choose from one of the following:
         'esgf' - [Default] Earth System Grid Federation.
         'urs' - NASA Earthdata Login, also known as URS.
+        'generic_http' - OPeNDAP servers which support plain HTTP authentication
         None - No authentication.
         Note that you will need to set your username and password respectively using the
         environment variables DAP_USER and DAP_PASSWORD.
@@ -43,10 +55,12 @@ class OpenDapSource(DataSourceMixin):
                 from pydap.cas.esgf import setup_session
             elif self.auth == "urs":
                 from pydap.cas.urs import setup_session
+            elif self.auth == "generic_http":
+                setup_session = _create_generic_http_auth_session
             else:
                 raise ValueError(
-                    "Authentication method should either be None, 'esgf' or 'urs', "
-                    f"got '{self.auth}' instead."
+                    "Authentication method should either be None, 'esgf', 'urs' or "
+                    f"'generic_http', got '{self.auth}' instead."
                 )
             username = os.getenv('DAP_USER', None)
             password = os.getenv('DAP_PASSWORD', None)
