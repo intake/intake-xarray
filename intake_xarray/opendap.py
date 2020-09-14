@@ -22,7 +22,7 @@ class OpenDapSource(DataSourceMixin):
     ----------
     urlpath: str
         Path to source file.
-    chunks: int or dict
+    chunks: None, int or dict
         Chunks is used to load the new dataset into dask
         arrays. ``chunks={}`` loads the dataset with dask using a single
         chunk for all arrays.
