@@ -38,7 +38,7 @@ class OpenDapSource(DataSourceMixin):
     """
     name = 'opendap'
 
-    def __init__(self, urlpath, chunks, auth="esgf", xarray_kwargs=None, metadata=None,
+    def __init__(self, urlpath, chunks, auth=None, xarray_kwargs=None, metadata=None,
                  **kwargs):
         self.urlpath = urlpath
         self.chunks = chunks
