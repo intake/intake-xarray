@@ -29,7 +29,8 @@ class OpenDapSource(DataSourceMixin):
     auth: None, "esgf" or "urs"
         Method of authenticating to the OPeNDAP server.
         Choose from one of the following:
-        'esgf' - [Default] Earth System Grid Federation.
+        None - [Default] Anonymous access.
+        'esgf' - Earth System Grid Federation.
         'urs' - NASA Earthdata Login, also known as URS.
         'generic_http' - OPeNDAP servers which support plain HTTP authentication
         None - No authentication.
@@ -38,7 +39,7 @@ class OpenDapSource(DataSourceMixin):
     """
     name = 'opendap'
 
-    def __init__(self, urlpath, chunks=None, auth="esgf", xarray_kwargs=None, metadata=None,
+    def __init__(self, urlpath, chunks=None, auth=None, xarray_kwargs=None, metadata=None,
                  **kwargs):
         self.urlpath = urlpath
         self.chunks = chunks
