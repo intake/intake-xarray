@@ -32,6 +32,8 @@ class ZarrSource(DataSourceMixin):
         import xarray as xr
         from fsspec import get_mapper
         kwargs = self._kwargs
+        if self.engine not in kwargs.keys():
+            kwargs.update(engine=self.engine)
         if "*" in self.urlpath or isinstance(self.urlpath, list):
             _open_dataset = xr.open_mfdataset
             self._mapper = self.urlpath  # pass directly the glob
