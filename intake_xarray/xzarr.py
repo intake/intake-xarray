@@ -20,6 +20,7 @@ class ZarrSource(DataSourceMixin):
                  concat_dim='concat_dim', xarray_kwargs=None,
                  storage_options=None, metadata=None, **kwargs):
         self.urlpath = urlpath
+        self.engine = engine
         self.chunks = chunks
         self.concat_dim = concat_dim
         self.storage_options = storage_options or {}
