@@ -39,7 +39,8 @@ class ZarrSource(DataSourceMixin):
                 kwargs.update(concat_dim=self.concat_dim)
         else:
             _open_dataset = xr.open_dataset
-            self._mapper = get_mapper(self.urlpath, **self.storage_options)
+            # self._mapper = get_mapper(self.urlpath, **self.storage_options)
+            self._mapper = self.urlpath
         self._ds = _open_dataset(self._mapper, chunks=self.chunks, **kwargs)
 
     def close(self):
