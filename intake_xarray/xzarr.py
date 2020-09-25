@@ -16,9 +16,9 @@ class ZarrSource(DataSourceMixin):
     """
     name = 'zarr'
 
-    def __init__(self, urlpath, chunks="auto", concat_dim='concat_dim',
-                 xarray_kwargs=None, storage_options=None, metadata=None,
-                 **kwargs):
+    def __init__(self, urlpath, engine='zarr', chunks="auto",
+                 concat_dim='concat_dim', xarray_kwargs=None,
+                 storage_options=None, metadata=None, **kwargs):
         self.urlpath = urlpath
         self.chunks = chunks
         self.concat_dim = concat_dim
@@ -33,14 +33,13 @@ class ZarrSource(DataSourceMixin):
         kwargs = self._kwargs
         if "*" in self.urlpath or isinstance(self.urlpath, list):
             _open_dataset = xr.open_mfdataset
-            self._mapper = self.urlpath
+            self._mapper = self.urlpath  # pass directly the glob
             if 'concat_dim' not in kwargs.keys():
                 kwargs.update(concat_dim=self.concat_dim)
         else:
             _open_dataset = xr.open_dataset
             self._mapper = get_mapper(self.urlpath, **self.storage_options)
-        self._ds = _open_dataset(self._mapper, chunks=self.chunks,
-                                 engine="zarr", **kwargs)
+        self._ds = _open_dataset(self._mapper, chunks=self.chunks, **kwargs)
 
     def close(self):
         super(ZarrSource, self).close()
