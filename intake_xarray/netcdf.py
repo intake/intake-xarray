@@ -67,7 +67,7 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
                 kwargs.update(preprocess=self._add_path_to_ds)
             if self.combine is not None:
                 if 'combine' in kwargs:
-                    raise Exception("Setting 'combine' argument twice in the catalog is invalid")
+                    raise Exception("Setting 'combine' argument twice  in the catalog is invalid")
                 kwargs.update(combine=self.combine)
             if self.concat_dim is not None:
                 if 'concat_dim' in kwargs:
