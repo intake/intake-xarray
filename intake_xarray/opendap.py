@@ -1,7 +1,18 @@
 # -*- coding: utf-8 -*-
 from .base import DataSourceMixin
 
+import requests
 import os
+
+
+def _create_generic_http_auth_session(username, password, check_url=None):
+    if username is None or password is None:
+        raise Exception("To use HTTP auth with the OPeNDAP driver you "
+                        "need to set the DAP_USER and DAP_PASSWORD "
+                        "environment variables")
+    session = requests.Session()
+    session.auth = (username, password)
+    return session
 
 
 class OpenDapSource(DataSourceMixin):
@@ -11,22 +22,24 @@ class OpenDapSource(DataSourceMixin):
     ----------
     urlpath: str
         Path to source file.
-    chunks: int or dict
+    chunks: None, int or dict
         Chunks is used to load the new dataset into dask
         arrays. ``chunks={}`` loads the dataset with dask using a single
         chunk for all arrays.
     auth: None, "esgf" or "urs"
         Method of authenticating to the OPeNDAP server.
         Choose from one of the following:
-        'esgf' - [Default] Earth System Grid Federation.
+        None - [Default] Anonymous access.
+        'esgf' - Earth System Grid Federation.
         'urs' - NASA Earthdata Login, also known as URS.
+        'generic_http' - OPeNDAP servers which support plain HTTP authentication
         None - No authentication.
         Note that you will need to set your username and password respectively using the
         environment variables DAP_USER and DAP_PASSWORD.
     """
     name = 'opendap'
 
-    def __init__(self, urlpath, chunks, auth="esgf", xarray_kwargs=None, metadata=None,
+    def __init__(self, urlpath, chunks=None, auth=None, xarray_kwargs=None, metadata=None,
                  **kwargs):
         self.urlpath = urlpath
         self.chunks = chunks
@@ -43,10 +56,12 @@ class OpenDapSource(DataSourceMixin):
                 from pydap.cas.esgf import setup_session
             elif self.auth == "urs":
                 from pydap.cas.urs import setup_session
+            elif self.auth == "generic_http":
+                setup_session = _create_generic_http_auth_session
             else:
                 raise ValueError(
-                    "Authentication method should either be None, 'esgf' or 'urs', "
-                    f"got '{self.auth}' instead."
+                    "Authentication method should either be None, 'esgf', 'urs' or "
+                    f"'generic_http', got '{self.auth}' instead."
                 )
             username = os.getenv('DAP_USER', None)
             password = os.getenv('DAP_PASSWORD', None)

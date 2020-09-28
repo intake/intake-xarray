@@ -31,7 +31,8 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
         "by_corrds" in a near future.
     concat_dim : str, optional
         Name of dimension along which to concatenate the files. Can
-        be new or pre-existing. Default is 'concat_dim'.
+        be new or pre-existing if combine is "nested". Must be None or new if
+        combine is "by_coords".
     path_as_pattern : bool or str, optional
         Whether to treat the path as a pattern (ie. ``data_{field}.nc``)
         and create new coodinates in the output corresponding to pattern

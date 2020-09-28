@@ -51,13 +51,14 @@ objects, they do not all accept the same file formats.
 netcdf
 ------
 
-Supports any file format that can be passed to xarray.open_dataset. this
-included .nc, .grib, and unauthenticated OPeNDAP URLs
+Supports any local or downloadable file that can be passed to xarray.open_dataset.
+Remote files will be cached locally.
+This included .nc and .grib but not OPeNDAP URLs as these are not downloadable files.
 
 opendap
 -------
 
-Supports OPeNDAP URLs that require authentication.
+Supports OPeNDAP URLs, optionally with `esgf`, `urs` or `generic_http` authentication.
 
 zarr
 -----
