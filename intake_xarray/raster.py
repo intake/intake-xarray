@@ -51,6 +51,10 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
         self.storage_options = storage_options or {}
         self._kwargs = xarray_kwargs or {}
         self._ds = None
+        if isinstance(self.urlpath, list):
+            self._can_be_local = fsspec.utils.can_be_local(self.urlpath[0])
+        else:
+            self._can_be_local = fsspec.utils.can_be_local(self.urlpath)
         super(RasterIOSource, self).__init__(metadata=metadata)
 
     def _open_files(self, files):
@@ -74,7 +78,10 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
 
     def _open_dataset(self):
         import xarray as xr
-        files = fsspec.open_local(self.urlpath, **self.storage_options)
+        if self._can_be_local:
+            files = fsspec.open_local(self.urlpath, **self.storage_options)
+        else:
+            files = self.urlpath
         if isinstance(files, list):
             self._ds = self._open_files(files)
         else:
