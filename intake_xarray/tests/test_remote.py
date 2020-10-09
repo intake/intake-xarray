@@ -5,13 +5,55 @@ import requests
 import subprocess
 import time
 import xarray as xr
-
+import http.server
+import contextlib
+import threading
+import fsspec
+import functools
+import socketserver
 
 PORT = 8425
 here = os.path.abspath(os.path.dirname(__file__))
 cat_file = os.path.join(here, 'data', 'catalog.yaml')
+DIRECTORY = os.path.join(here, 'data')
 
 
+@contextlib.contextmanager
+def serve():
+    # https://stackoverflow.com/questions/39801718/how-to-run-a-http-server-which-serves-a-specific-path
+    PORT = 8426
+    Handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=DIRECTORY)
+    httpd = socketserver.TCPServer(("", PORT), Handler)
+    th = threading.Thread(target=httpd.serve_forever)
+    th.daemon = True
+    th.start()
+    try:
+        yield "http://localhost:%i" % PORT
+    finally:
+        httpd.socket.close()
+        httpd.shutdown()
+        th.join()
+
+@pytest.fixture(scope="module")
+def server():
+    with serve() as s:
+        yield s
+
+def test_list(server):
+    h = fsspec.filesystem("http")
+    out = h.glob(server + '/')
+    print(out)
+    assert len(out) > 0
+    assert server+'/RGB.byte.tif' in out
+
+def test_read_remote_tif(server):
+    url = f'{server}/RGB.byte.tif'
+    source = intake.open_rasterio(url, chunks={})
+    da = source.to_dask()
+    print(da)
+    assert False
+
+# Remote catalogs with intake-server
 @pytest.fixture(scope='module')
 def intake_server():
     command = ['intake-server', '-p', str(PORT), cat_file]
