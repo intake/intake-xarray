@@ -44,11 +44,11 @@ def test_list(data_server):
     assert data_server+'/RGB.byte.tif' in out
 
 
-def test_read_remote_tif(data_server):
+def test_open_rasterio(data_server):
     url = f'{data_server}/RGB.byte.tif'
     source = intake.open_rasterio(url, chunks={})
     da = source.to_dask()
-    assert isintance(da, xarray.core.dataarray.DataArray)
+    assert isinstance(da, xr.core.dataarray.DataArray)
 
 
 # Remote catalogs with intake-server

@@ -19,7 +19,6 @@ def test_discover(source, netcdf_source, zarr_source, dataset):
     assert r['dtype'] is None
     assert r['metadata'] is not None
 
-    assert source.datashape is None
     assert source.metadata['dims'] == dict(dataset.dims)
     assert set(source.metadata['data_vars']) == set(dataset.data_vars.keys())
     assert set(source.metadata['coords']) == set(dataset.coords.keys())
