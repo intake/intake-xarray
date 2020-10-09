@@ -16,7 +16,6 @@ def test_discover(source, netcdf_source, zarr_source, dataset):
     source = {'netcdf': netcdf_source, 'zarr': zarr_source}[source]
     r = source.discover()
 
-    assert r['datashape'] is None
     assert r['dtype'] is None
     assert r['metadata'] is not None
 

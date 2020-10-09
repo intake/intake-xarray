@@ -5,53 +5,51 @@ import requests
 import subprocess
 import time
 import xarray as xr
-import http.server
-import contextlib
-import threading
 import fsspec
-import functools
-import socketserver
 
-PORT = 8425
+PORT = 8425 # for intake-server tests
 here = os.path.abspath(os.path.dirname(__file__))
 cat_file = os.path.join(here, 'data', 'catalog.yaml')
 DIRECTORY = os.path.join(here, 'data')
 
 
-@contextlib.contextmanager
-def serve():
-    # https://stackoverflow.com/questions/39801718/how-to-run-a-http-server-which-serves-a-specific-path
-    PORT = 8426
-    Handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=DIRECTORY)
-    httpd = socketserver.TCPServer(("", PORT), Handler)
-    th = threading.Thread(target=httpd.serve_forever)
-    th.daemon = True
-    th.start()
+@pytest.fixture(scope='module')
+def data_server():
+    ''' Serves test/data folder to http://localhost:8000 '''
+    pwd = os.getcwd()
+    os.chdir(DIRECTORY)
+    command = ['python', '-m', 'RangeHTTPServer']
     try:
-        yield "http://localhost:%i" % PORT
+        P = subprocess.Popen(command)
+        timeout = 10
+        while True:
+            try:
+                requests.get('http://localhost:8000')
+                break
+            except:
+                time.sleep(0.1)
+                timeout -= 0.1
+                assert timeout > 0
+        yield 'http://localhost:8000'
     finally:
-        httpd.socket.close()
-        httpd.shutdown()
-        th.join()
+        os.chdir(pwd)
+        P.terminate()
+        P.communicate()
 
-@pytest.fixture(scope="module")
-def server():
-    with serve() as s:
-        yield s
 
-def test_list(server):
+def test_list(data_server):
     h = fsspec.filesystem("http")
-    out = h.glob(server + '/')
-    print(out)
+    out = h.glob(data_server + '/')
     assert len(out) > 0
-    assert server+'/RGB.byte.tif' in out
+    assert data_server+'/RGB.byte.tif' in out
 
-def test_read_remote_tif(server):
-    url = f'{server}/RGB.byte.tif'
+
+def test_read_remote_tif(data_server):
+    url = f'{data_server}/RGB.byte.tif'
     source = intake.open_rasterio(url, chunks={})
     da = source.to_dask()
-    print(da)
-    assert False
+    assert isintance(da, xarray.core.dataarray.DataArray)
+
 
 # Remote catalogs with intake-server
 @pytest.fixture(scope='module')
