@@ -8,12 +8,12 @@ on:
 
 jobs:
   test:
-    name: ${{ matrix.CONDA_ENV }}-build
+    name: ${{ matrix.CONDA_ENV }}-pytest
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        CONDA_ENV: [36, 36-defaults, 37-nodefaults, 37-upstream]
+        CONDA_ENV: [36, 37, 38, 37-upstream]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
