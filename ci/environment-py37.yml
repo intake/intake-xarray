@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.7
+  - aiohttp
   - intake
   - netcdf4
   - pip
@@ -12,3 +13,5 @@ dependencies:
   - scikit-image
   - xarray
   - zarr
+  - pip:
+       - rangehttpserver
