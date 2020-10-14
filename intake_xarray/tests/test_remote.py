@@ -5,13 +5,53 @@ import requests
 import subprocess
 import time
 import xarray as xr
+import fsspec
 
-
-PORT = 8425
+PORT = 8425 # for intake-server tests
 here = os.path.abspath(os.path.dirname(__file__))
 cat_file = os.path.join(here, 'data', 'catalog.yaml')
+DIRECTORY = os.path.join(here, 'data')
 
 
+@pytest.fixture(scope='module')
+def data_server():
+    ''' Serves test/data folder to http://localhost:8000 '''
+    pwd = os.getcwd()
+    os.chdir(DIRECTORY)
+    command = ['python', '-m', 'RangeHTTPServer']
+    try:
+        P = subprocess.Popen(command)
+        timeout = 10
+        while True:
+            try:
+                requests.get('http://localhost:8000')
+                break
+            except:
+                time.sleep(0.1)
+                timeout -= 0.1
+                assert timeout > 0
+        yield 'http://localhost:8000'
+    finally:
+        os.chdir(pwd)
+        P.terminate()
+        P.communicate()
+
+
+def test_list(data_server):
+    h = fsspec.filesystem("http")
+    out = h.glob(data_server + '/')
+    assert len(out) > 0
+    assert data_server+'/RGB.byte.tif' in out
+
+
+def test_open_rasterio(data_server):
+    url = f'{data_server}/RGB.byte.tif'
+    source = intake.open_rasterio(url, chunks={})
+    da = source.to_dask()
+    assert isinstance(da, xr.core.dataarray.DataArray)
+
+
+# Remote catalogs with intake-server
 @pytest.fixture(scope='module')
 def intake_server():
     command = ['intake-server', '-p', str(PORT), cat_file]

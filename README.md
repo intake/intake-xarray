@@ -1,6 +1,6 @@
 # intake-xarray
 
-[![Build Status](https://travis-ci.org/intake/intake-xarray.svg?branch=master)](https://travis-ci.org/intake/intake-xarray)
+![CI](https://github.com/intake/intake-xarray/workflows/CI/badge.svg)
 
 Intake-xarray: xarray Plugin for [Intake](https://github.com/intake/intake)
 

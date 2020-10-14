@@ -1,15 +1,17 @@
 name: test_env
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - python=3.7
-  - intake>=0.4.1
-  - xarray
-  - zarr
-  - pytest
+  - aiohttp
+  - intake
   - netcdf4
   - pip
   - pydap
+  - pytest
   - rasterio
   - scikit-image
+  - xarray
+  - zarr
+  - pip:
+       - rangehttpserver
