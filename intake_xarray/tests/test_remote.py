@@ -6,11 +6,13 @@ import subprocess
 import time
 import xarray as xr
 import fsspec
+import pytest
 
 PORT = 8425 # for intake-server tests
 here = os.path.abspath(os.path.dirname(__file__))
 cat_file = os.path.join(here, 'data', 'catalog.yaml')
 DIRECTORY = os.path.join(here, 'data')
+pytest.importorskip("RangeHTTPServer")
 
 
 @pytest.fixture(scope='module')
@@ -45,6 +47,7 @@ def test_list(data_server):
 
 
 def test_open_rasterio(data_server):
+    pytest.importorskip("resterio")
     url = f'{data_server}/RGB.byte.tif'
     source = intake.open_rasterio(url, chunks={})
     da = source.to_dask()
