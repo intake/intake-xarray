@@ -40,10 +40,11 @@ class OpenDapSource(DataSourceMixin):
     name = 'opendap'
 
     def __init__(self, urlpath, chunks=None, auth=None, xarray_kwargs=None, metadata=None,
-                 **kwargs):
+                 engine="netcdf4", **kwargs):
         self.urlpath = urlpath
         self.chunks = chunks
         self.auth = auth
+        self.engine = engine
         self._kwargs = xarray_kwargs or kwargs
         self._ds = None
         super(OpenDapSource, self).__init__(metadata=metadata)
@@ -71,7 +72,9 @@ class OpenDapSource(DataSourceMixin):
 
     def _open_dataset(self):
         import xarray as xr
-        session = self._get_session()
-
-        store = xr.backends.PydapDataStore.open(self.urlpath, session=session)
+        if self.engine == "netcdf4":
+            store = xr.backends.PydapDataStore.open(self.urlpath, session=session)
+        else:
+            session = self._get_session()
+            store = xr.backends.PydapDataStore.open(self.urlpath, session=session)
         self._ds = xr.open_dataset(store, chunks=self.chunks, **self._kwargs)
