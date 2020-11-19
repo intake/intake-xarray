@@ -73,7 +73,7 @@ class OpenDapSource(DataSourceMixin):
     def _open_dataset(self):
         import xarray as xr
         if self.engine == "netcdf4":
-            store = xr.backends.PydapDataStore.open(self.urlpath, session=session)
+            store = xr.backends.NetCDF4DataStore.open(self.urlpath)
         else:
             session = self._get_session()
             store = xr.backends.PydapDataStore.open(self.urlpath, session=session)
