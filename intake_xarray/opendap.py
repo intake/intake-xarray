@@ -36,11 +36,13 @@ class OpenDapSource(DataSourceMixin):
         None - No authentication.
         Note that you will need to set your username and password respectively using the
         environment variables DAP_USER and DAP_PASSWORD.
+    engine: str
+        engine used for reading OPeNDAP server.
     """
     name = 'opendap'
 
-    def __init__(self, urlpath, chunks=None, auth=None, xarray_kwargs=None, metadata=None,
-                 engine="netcdf4", **kwargs):
+    def __init__(self, urlpath, chunks=None, auth=None, engine="pydap", xarray_kwargs=None, metadata=None,
+                 **kwargs):
         self.urlpath = urlpath
         self.chunks = chunks
         self.auth = auth
@@ -70,11 +72,23 @@ class OpenDapSource(DataSourceMixin):
 
         return session
 
+    def _get_store(self):
+        import xarray as xr
+        session = self._get_session()
+        if self.engine == "netcdf4":
+            if session:
+                raise ValueError(
+                    "Opendap session requires 'pydap' engine (engine=pydap)."
+                )
+            return xr.backends.NetCDF4DataStore.open(self.urlpath)
+        elif self.engine == "pydap":
+            return xr.backends.PydapDataStore.open(self.urlpath, session=session)
+        else:
+            raise ValueError(
+                "xarray engine for opendap driver should either be 'netcdf4' or 'pydap'."
+            )
+
     def _open_dataset(self):
         import xarray as xr
-        if self.engine == "netcdf4":
-            store = xr.backends.NetCDF4DataStore.open(self.urlpath)
-        else:
-            session = self._get_session()
-            store = xr.backends.PydapDataStore.open(self.urlpath, session=session)
+        store = self._get_store()
         self._ds = xr.open_dataset(store, chunks=self.chunks, **self._kwargs)
