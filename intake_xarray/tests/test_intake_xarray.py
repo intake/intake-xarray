@@ -322,10 +322,11 @@ def test_read_jpg_image():
     assert da.shape == (192, 192)
 
 
-def test_read_opendap_no_auth():
+@pytest.mark.parametrize("engine", ["pydap", "netcdf4"])
+def test_read_opendap_no_auth(engine):
     pytest.importorskip("pydap")
     cat = intake.open_catalog(os.path.join(here, "data", "catalog.yaml"))
-    source = cat.opendap_source
+    source = cat["opendap_source_{}".format(engine)]
     info = source.discover()
     assert info["metadata"]["dims"] == {"TIME": 12}
     x = source.read()
