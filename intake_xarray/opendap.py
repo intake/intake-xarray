@@ -37,7 +37,7 @@ class OpenDapSource(DataSourceMixin):
         Note that you will need to set your username and password respectively using the
         environment variables DAP_USER and DAP_PASSWORD.
     engine: str
-        engine used for reading OPeNDAP server.
+        Engine used for reading OPeNDAP URL.
     """
     name = 'opendap'
 
