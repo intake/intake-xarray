@@ -361,6 +361,14 @@ def test_read_opendap_invalid_auth():
         source.discover()
 
 
+def test_read_opendap_invalid_engine():
+    from intake_xarray.opendap import OpenDapSource
+
+    source = OpenDapSource(urlpath="https://test.url", chunks={}, auth=None, engine="abcd")
+    with pytest.raises(ValueError):
+        source.discover()
+
+
 def test_cached_list_netcdf():
     tempd = str(tempfile.mkdtemp())
     from intake_xarray.netcdf import NetCDFSource
