@@ -37,7 +37,7 @@ class OpenDapSource(DataSourceMixin):
         Note that you will need to set your username and password respectively using the
         environment variables DAP_USER and DAP_PASSWORD.
     engine: str
-        Engine used for reading OPeNDAP URL.
+        Engine used for reading OPeNDAP URL. Should be one of 'pydap' or 'netcdf4'.
     """
     name = 'opendap'
 
@@ -78,7 +78,7 @@ class OpenDapSource(DataSourceMixin):
         if self.engine == "netcdf4":
             if session:
                 raise ValueError(
-                    "Opendap session requires 'pydap' engine (engine=pydap)."
+                    "Opendap session requires 'pydap' engine."
                 )
             return xr.backends.NetCDF4DataStore.open(self.urlpath)
         elif self.engine == "pydap":
