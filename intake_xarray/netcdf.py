@@ -54,6 +54,10 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
         self.storage_options = storage_options or {}
         self.xarray_kwargs = xarray_kwargs or {}
         self._ds = None
+        if isinstance(self.urlpath, list):
+            self._can_be_local = fsspec.utils.can_be_local(self.urlpath[0])
+        else:
+            self._can_be_local = fsspec.utils.can_be_local(self.urlpath)
         super(NetCDFSource, self).__init__(metadata=metadata, **kwargs)
 
     def _open_dataset(self):
@@ -76,7 +80,11 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
                 kwargs.update(concat_dim=self.concat_dim)
         else:
             _open_dataset = xr.open_dataset
-        url = fsspec.open_local(url, **self.storage_options)
+
+        if self._can_be_local:
+            url = fsspec.open_local(self.urlpath, **self.storage_options)
+        else:
+            url = fsspec.open(self.urlpath, **self.storage_options)
 
         self._ds = _open_dataset(url, chunks=self.chunks, **kwargs)
 
