@@ -50,6 +50,11 @@ def test_open_rasterio(data_server):
     da = source.to_dask()
     assert isinstance(da, xr.core.dataarray.DataArray)
 
+def test_open_netcdf(data_server):
+    url = f'{data_server}/example_1.nc'
+    source = intake.open_netcdf(url, chunks={})
+    da = source.to_dask()
+    assert isinstance(da, xr.core.dataarray.DataSet)
 
 # Remote catalogs with intake-server
 @pytest.fixture(scope='module')
