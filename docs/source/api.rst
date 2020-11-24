@@ -11,7 +11,7 @@ API Reference
 .. autoclass:: intake_xarray.netcdf.NetCDFSource
    :members:
 
-.. autoclass:: intake_xarray.netcdf.OpenDapSource
+.. autoclass:: intake_xarray.opendap.OpenDapSource
    :members:
 
 .. autoclass:: intake_xarray.xzarr.ZarrSource
