@@ -167,8 +167,18 @@ def s3_base():
     proc.terminate()
     proc.wait()
 
+
+@pytest.fixture(scope='function')
+def aws_credentials():
+    """Mocked AWS Credentials for moto."""
+    os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
+    os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
+    os.environ['AWS_SECURITY_TOKEN'] = 'testing'
+    os.environ['AWS_SESSION_TOKEN'] = 'testing'
+
+
 @pytest.fixture()
-def s3(s3_base):
+def s3(s3_base, aws_credentials):
     ''' anonymous access local s3 bucket for testing '''
     from botocore.session import Session
     session = Session()
