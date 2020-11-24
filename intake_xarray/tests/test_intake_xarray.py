@@ -345,18 +345,34 @@ def test_read_opendap_with_auth(auth):
     with patch(
         f"pydap.cas.{auth}.setup_session", return_value=None
     ) as mock_setup_session:
-        source = OpenDapSource(urlpath=urlpath, chunks={}, auth=auth)
+        source = OpenDapSource(urlpath=urlpath, chunks={}, auth=auth, engine="pydap")
         source.discover()
         mock_setup_session.assert_called_once_with(
             os.environ["DAP_USER"], os.environ["DAP_PASSWORD"], check_url=urlpath
         )
 
 
+@pytest.mark.parametrize("auth", ["esgf", "urs"])
+def test_read_opendap_with_auth_netcdf4(auth):
+    from intake_xarray.opendap import OpenDapSource
+
+    os.environ["DAP_USER"] = "username"
+    os.environ["DAP_PASSWORD"] = "password"
+    urlpath = "http://test.opendap.org/opendap/hyrax/data/nc/123.nc"
+
+    with patch(
+        f"pydap.cas.{auth}.setup_session", return_value=1
+    ) as mock_setup_session:
+        source = OpenDapSource(urlpath=urlpath, chunks={}, auth=auth, engine="netcdf4")
+        with pytest.raises(ValueError):
+            source.discover()
+
+
 def test_read_opendap_invalid_auth():
     pytest.importorskip("pydap")
     from intake_xarray.opendap import OpenDapSource
 
-    source = OpenDapSource(urlpath="https://test.url", chunks={}, auth="abcd")
+    source = OpenDapSource(urlpath="https://test.url", chunks={}, auth="abcd", engine="pydap")
     with pytest.raises(ValueError):
         source.discover()
 
