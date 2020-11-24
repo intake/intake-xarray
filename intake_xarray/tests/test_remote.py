@@ -142,8 +142,7 @@ def test_http_read_netcdf_simplecache(data_server):
 #based on: https://github.com/dask/s3fs/blob/master/s3fs/tests/test_s3fs.py
 test_bucket_name = "test"
 PORT_S3 = 8001
-#endpoint_uri = f"http://localhost:{PORT_S3}/"
-endpoint_uri = "http://127.0.0.1:%s" % PORT_S3
+endpoint_uri = "http://localhost:%s" % PORT_S3
 test_files = ['RGB.byte.tif', 'example_1.nc']
 
 @pytest.fixture()
