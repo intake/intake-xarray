@@ -81,6 +81,7 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
         if self._can_be_local:
             files = fsspec.open_local(self.urlpath, **self.storage_options)
         else:
+            # pass URLs to delegate remote opening to rasterio library
             files = self.urlpath
             #files = fsspec.open(self.urlpath, **self.storage_options).open()
         if isinstance(files, list):

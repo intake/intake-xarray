@@ -89,7 +89,6 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
             # https://github.com/intake/filesystem_spec/issues/476#issuecomment-732372918
             url = fsspec.open(self.urlpath, **self.storage_options).open()
 
-        print(kwargs)
         self._ds = _open_dataset(url, chunks=self.chunks, **kwargs)
 
     def _add_path_to_ds(self, ds):

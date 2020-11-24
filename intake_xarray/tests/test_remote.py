@@ -1,3 +1,4 @@
+# Tests for intake-server, local HTTP file server, local "S3" object server
 import aiohttp
 import intake
 import os
@@ -9,8 +10,8 @@ import xarray as xr
 import fsspec
 import dask
 import numpy
+import s3fs
 
-PORT = 8425 # for intake-server tests
 here = os.path.abspath(os.path.dirname(__file__))
 cat_file = os.path.join(here, 'data', 'catalog.yaml')
 DIRECTORY = os.path.join(here, 'data')
@@ -40,7 +41,7 @@ def data_server():
         P.communicate()
 
 
-def test_list_server_files(data_server):
+def test_http_server_files(data_server):
     test_files = ['RGB.byte.tif', 'example_1.nc', 'example_2.nc', 'little_green.tif', 'little_red.tif']
     h = fsspec.filesystem("http")
     out = h.glob(data_server + '/')
@@ -48,25 +49,16 @@ def test_list_server_files(data_server):
     assert set([data_server+'/'+x for x in test_files]).issubset(set(out))
 
 # REMOTE GEOTIFF
-def test_open_rasterio(data_server):
+def test_http_open_rasterio(data_server):
     url = f'{data_server}/RGB.byte.tif'
     source = intake.open_rasterio(url)
-    da = source.read()
-    assert isinstance(da, xr.core.dataarray.DataArray)
-    assert isinstance(da.data, numpy.ndarray)
-
-
-def test_open_rasterio_dask(data_server):
-    url = f'{data_server}/RGB.byte.tif'
-    source = intake.open_rasterio(url, chunks={})
     da = source.to_dask()
     assert isinstance(da, xr.core.dataarray.DataArray)
-    assert isinstance(da.data, dask.array.core.Array)
 
 
-def test_read_rasterio(data_server):
+def test_http_read_rasterio(data_server):
     url = f'{data_server}/RGB.byte.tif'
-    source = intake.open_rasterio(url, chunks={})
+    source = intake.open_rasterio(url)
     da = source.read()
     assert da.attrs['crs'] == '+init=epsg:32618'
     assert da.attrs['AREA_OR_POINT'] == 'Area'
@@ -74,7 +66,15 @@ def test_read_rasterio(data_server):
     assert da.isel(band=2,x=300,y=500).values == 129
 
 
-def test_open_rasterio_auth(data_server):
+def test_http_open_rasterio_dask(data_server):
+    url = f'{data_server}/RGB.byte.tif'
+    source = intake.open_rasterio(url, chunks={})
+    da = source.to_dask()
+    assert isinstance(da, xr.core.dataarray.DataArray)
+    assert isinstance(da.data, dask.array.core.Array)
+
+
+def test_http_open_rasterio_auth(data_server):
     url = f'{data_server}/RGB.byte.tif'
     auth = dict(client_kwargs={'auth': aiohttp.BasicAuth('USER', 'PASS')})
     # NOTE: if url startswith 'https' use 'https' instead of 'http' for storage_options
@@ -84,14 +84,14 @@ def test_open_rasterio_auth(data_server):
     assert isinstance(source_auth, aiohttp.BasicAuth)
 
 
-def test_open_rasterio_simplecache(data_server):
+def test_http_read_rasterio_simplecache(data_server):
     url = f'simplecache::{data_server}/RGB.byte.tif'
     source = intake.open_rasterio(url, chunks={})
     da = source.to_dask()
     assert isinstance(da, xr.core.dataarray.DataArray)
 
 
-def test_open_rasterio_pattern(data_server):
+def test_http_read_rasterio_pattern(data_server):
     url = [data_server+'/'+x for x in ('little_red.tif', 'little_green.tif')]
     source = intake.open_rasterio(url,
                                   path_as_pattern='{}/little_{color}.tif',
@@ -104,7 +104,7 @@ def test_open_rasterio_pattern(data_server):
 
 
 # REMOTE NETCDF / HDF
-def test_open_netcdf(data_server):
+def test_http_open_netcdf(data_server):
     url = f'{data_server}/example_1.nc'
     source = intake.open_netcdf(url)
     ds = source.to_dask()
@@ -112,7 +112,7 @@ def test_open_netcdf(data_server):
     assert isinstance(ds.temp.data, numpy.ndarray)
 
 
-def test_read_netcdf(data_server):
+def test_http_read_netcdf(data_server):
     url = f'{data_server}/example_1.nc'
     source = intake.open_netcdf(url)
     ds = source.read()
@@ -120,7 +120,7 @@ def test_read_netcdf(data_server):
     assert ds['rh'].isel(lat=0,lon=0,time=0).values == 0.5
 
 
-def test_open_netcdf_dask(data_server):
+def test_http_read_netcdf_dask(data_server):
     url = f'{data_server}/next_example_1.nc'
     source = intake.open_netcdf(url, chunks={},
                                 xarray_kwargs=dict(engine='h5netcdf'))
@@ -130,7 +130,7 @@ def test_open_netcdf_dask(data_server):
     assert isinstance(ds.temp.data, dask.array.core.Array)
 
 
-def test_open_netcdf_simplecache(data_server):
+def test_http_read_netcdf_simplecache(data_server):
     url = f'simplecache::{data_server}/example_1.nc'
     source = intake.open_netcdf(url, chunks={})
     ds = source.to_dask()
@@ -138,9 +138,96 @@ def test_open_netcdf_simplecache(data_server):
     assert isinstance(ds.temp.data, dask.array.core.Array)
 
 
+# S3
+#based on: https://github.com/dask/s3fs/blob/master/s3fs/tests/test_s3fs.py
+test_bucket_name = "test"
+PORT_S3 = 8001
+#endpoint_uri = f"http://localhost:{PORT_S3}/"
+endpoint_uri = "http://127.0.0.1:%s" % PORT_S3
+test_files = ['RGB.byte.tif', 'example_1.nc']
+
+@pytest.fixture()
+def s3_base():
+    # writable local S3 system
+    import shlex
+    import subprocess
+
+    proc = subprocess.Popen(shlex.split("moto_server s3 -p %s" % PORT_S3))
+
+    timeout = 5
+    while timeout > 0:
+        try:
+            r = requests.get(endpoint_uri)
+            if r.ok:
+                break
+        except:
+            pass
+        timeout -= 0.1
+        time.sleep(0.1)
+    yield
+    proc.terminate()
+    proc.wait()
+
+@pytest.fixture()
+def s3(s3_base):
+    ''' anonymous access local s3 bucket for testing '''
+    from botocore.session import Session
+    session = Session()
+    client = session.create_client("s3", endpoint_url=endpoint_uri)
+    client.create_bucket(Bucket=test_bucket_name, ACL="public-read")
+
+    for file_name in [os.path.join(DIRECTORY,x) for x in test_files]:
+        with open(file_name, 'rb') as f:
+            data = f.read()
+            key = os.path.basename(file_name)
+            client.put_object(Bucket=test_bucket_name, Key=key, Body=data)
+
+    # Make sure cache not being used
+    s3fs.S3FileSystem.clear_instance_cache()
+    s3 = s3fs.S3FileSystem(anon=True, client_kwargs={"endpoint_url": endpoint_uri})
+    s3.invalidate_cache()
+    yield
+
+
+def test_s3_list_files(s3):
+    s3 = s3fs.S3FileSystem(anon=True, client_kwargs={"endpoint_url": endpoint_uri})
+    files = s3.ls(test_bucket_name)
+    assert len(files) > 0
+    assert set([test_bucket_name+'/'+x for x in test_files]).issubset(set(files))
+
+
+def test_s3_read_rasterio(s3):
+    # Lots of GDAL Environment variables needed for this to work !
+    # https://gdal.org/user/virtual_file_systems.html#vsis3-aws-s3-files
+    os.environ['AWS_NO_SIGN_REQUEST']='YES'
+    os.environ['AWS_S3_ENDPOINT'] = endpoint_uri.lstrip('http://')
+    os.environ['AWS_VIRTUAL_HOSTING']= 'FALSE'
+    os.environ['AWS_HTTPS']= 'NO'
+    os.environ['GDAL_DISABLE_READDIR_ON_OPEN']='EMPTY_DIR'
+    os.environ['CPL_CURL_VERBOSE']='YES'
+    url = f's3://{test_bucket_name}/RGB.byte.tif'
+    source = intake.open_rasterio(url)
+    da = source.read()
+    assert da.attrs['crs'] == '+init=epsg:32618'
+    assert da.attrs['AREA_OR_POINT'] == 'Area'
+    assert da.dtype == 'uint8'
+    assert da.isel(band=2,x=300,y=500).values == 129
+
+
+def test_s3_read_netcdf(s3):
+    url = f's3://{test_bucket_name}/example_1.nc'
+    s3options = dict(client_kwargs={"endpoint_url": endpoint_uri})
+    source = intake.open_netcdf(url,
+                                storage_options=s3options)
+    ds = source.read()
+    assert ds['rh'].isel(lat=0,lon=0,time=0).values.dtype == 'float32'
+    assert ds['rh'].isel(lat=0,lon=0,time=0).values == 0.5
+
+
 # Remote catalogs with intake-server
 @pytest.fixture(scope='module')
 def intake_server():
+    PORT = 8002
     command = ['intake-server', '-p', str(PORT), cat_file]
     try:
         P = subprocess.Popen(command)
@@ -159,7 +246,7 @@ def intake_server():
         P.communicate()
 
 
-def test_remote_netcdf(intake_server):
+def test_intake_server_netcdf(intake_server):
     cat_local = intake.open_catalog(cat_file)
     cat = intake.open_catalog(intake_server)
     assert 'xarray_source' in cat
@@ -175,7 +262,7 @@ def test_remote_netcdf(intake_server):
             cat_local.xarray_source.read()).all()
 
 
-def test_remote_tiff(intake_server):
+def test_intake_server_tiff(intake_server):
     pytest.importorskip('rasterio')
     cat_local = intake.open_catalog(cat_file)
     cat = intake.open_catalog(intake_server)

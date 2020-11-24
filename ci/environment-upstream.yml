@@ -4,12 +4,15 @@ channels:
 dependencies:
   - python
   - aiohttp
+  - flask
+  - gcsfs
   - h5netcdf
   - netcdf4
   - pip
   - pydap
   - pytest
   - rasterio
+  - s3fs
   - scikit-image
   - zarr
   - pip:
@@ -17,3 +20,4 @@ dependencies:
        - git+https://github.com/intake/intake.git
        - git+https://github.com/pydata/xarray.git
        - rangehttpserver
+       - moto[s3]

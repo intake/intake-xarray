@@ -4,6 +4,8 @@ channels:
 dependencies:
   - python=3.7
   - aiohttp
+  - flask
+  - gcsfs
   - h5netcdf
   - intake
   - netcdf4
@@ -11,8 +13,10 @@ dependencies:
   - pydap
   - pytest
   - rasterio
+  - s3fs
   - scikit-image
   - xarray
   - zarr
   - pip:
        - rangehttpserver
+       - moto[s3]
