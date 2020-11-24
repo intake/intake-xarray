@@ -37,6 +37,8 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
         Whether to treat the path as a pattern (ie. ``data_{field}.nc``)
         and create new coodinates in the output corresponding to pattern
         fields. If str, is treated as pattern to match on. Default is True.
+    xarray_kwargs: dict
+        Additional xarray kwargs for xr.open_dataset() or xr.open_mfdataset().
     storage_options: dict
         If using a remote fs (whether caching locally or not), these are
         the kwargs to pass to that FS.
@@ -84,8 +86,10 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
         if self._can_be_local:
             url = fsspec.open_local(self.urlpath, **self.storage_options)
         else:
-            url = fsspec.open(self.urlpath, **self.storage_options)
+            # https://github.com/intake/filesystem_spec/issues/476#issuecomment-732372918
+            url = fsspec.open(self.urlpath, **self.storage_options).open()
 
+        print(kwargs)
         self._ds = _open_dataset(url, chunks=self.chunks, **kwargs)
 
     def _add_path_to_ds(self, ds):

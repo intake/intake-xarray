@@ -13,13 +13,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        CONDA_ENV: [36, 37, 38, 37-upstream]
+        CONDA_ENV: [36, 37, 38, 39, upstream]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v1
+        uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
           auto-activate-base: false
@@ -35,4 +35,4 @@ jobs:
       - name: Run Tests
         shell: bash -l {0}
         run: |
-          pytest --verbose
+          pytest --verbose --ignore=intake_xarray/tests/test_network.py
