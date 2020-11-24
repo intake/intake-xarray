@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        CONDA_ENV: [36, 37, 38, 37-upstream]
+        CONDA_ENV: [py36, py37, py38, py39, upstream]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -24,7 +24,7 @@ jobs:
           auto-update-conda: true
           auto-activate-base: false
           activate-environment: test_env
-          environment-file: ci/environment-py${{ matrix.CONDA_ENV }}.yml
+          environment-file: ci/environment-${{ matrix.CONDA_ENV }}.yml
 
       - name: Development Install Intake-Xarray
         shell: bash -l {0}
@@ -35,4 +35,4 @@ jobs:
       - name: Run Tests
         shell: bash -l {0}
         run: |
-          pytest --verbose
+          pytest --verbose --ignore=intake_xarray/tests/test_network.py

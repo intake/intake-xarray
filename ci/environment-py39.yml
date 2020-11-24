@@ -2,17 +2,21 @@ name: test_env
 channels:
   - conda-forge
 dependencies:
-  - python=3.7
+  - python=3.9
   - aiohttp
+  - boto3
+  - flask
+  - h5netcdf
+  - intake
   - netcdf4
   - pip
   - pydap
   - pytest
   - rasterio
+  - s3fs
   - scikit-image
   - xarray
   - zarr
   - pip:
-       - git+https://github.com/intake/filesystem_spec.git
-       - git+https://github.com/intake/intake.git
        - rangehttpserver
+       - moto[s3]

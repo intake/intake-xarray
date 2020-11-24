@@ -30,10 +30,10 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
             - ``s3://data/landsat8_band{band}.tif``
             - ``s3://data/{location}/landsat8_band{band}.tif``
             - ``{{ CATALOG_DIR }}data/landsat8_{start_date:%Y%m%d}_band{band}.tif``
-    chunks: int or dict
+    chunks: None or int or dict, optional
         Chunks is used to load the new dataset into dask
         arrays. ``chunks={}`` loads the dataset with dask using a single
-        chunk for all arrays.
+        chunk for all arrays. default `None` loads numpy arrays.
     path_as_pattern: bool or str, optional
         Whether to treat the path as a pattern (ie. ``data_{field}.tif``)
         and create new coodinates in the output corresponding to pattern
@@ -41,7 +41,7 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
     """
     name = 'rasterio'
 
-    def __init__(self, urlpath, chunks, concat_dim='concat_dim',
+    def __init__(self, urlpath, chunks=None, concat_dim='concat_dim',
                  xarray_kwargs=None, metadata=None, path_as_pattern=True,
                  storage_options=None, **kwargs):
         self.path_as_pattern = path_as_pattern
@@ -81,7 +81,9 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
         if self._can_be_local:
             files = fsspec.open_local(self.urlpath, **self.storage_options)
         else:
+            # pass URLs to delegate remote opening to rasterio library
             files = self.urlpath
+            #files = fsspec.open(self.urlpath, **self.storage_options).open()
         if isinstance(files, list):
             self._ds = self._open_files(files)
         else:
@@ -115,11 +117,17 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
                     metadata[k] = v
                 except TypeError:
                     pass
+
+            if hasattr(self._ds.data, 'npartitions'):
+                npart = self._ds.data.npartitions
+            else:
+                npart = None
+
             self._schema = Schema(
                 datashape=None,
                 dtype=str(self._ds.dtype),
                 shape=self._ds.shape,
-                npartitions=self._ds.data.npartitions,
+                npartitions=npart,
                 extra_metadata=metadata)
 
         return self._schema
