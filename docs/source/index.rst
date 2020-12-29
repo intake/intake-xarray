@@ -10,6 +10,7 @@ data access and cataloging system.
 
    quickstart.rst
    api.rst
+   contributing.rst
 
 
 Indices and tables
