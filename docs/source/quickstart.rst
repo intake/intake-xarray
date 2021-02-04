@@ -48,8 +48,8 @@ While all the drivers in the ``intake-xarray`` plugin yield ``xarray``
 objects, they do not all accept the same file formats.
 
 
-netcdf
-------
+netcdf/grib
+-----------
 
 Supports any local or downloadable file that can be passed to xarray.open_dataset.
 Remote files will be cached locally.
