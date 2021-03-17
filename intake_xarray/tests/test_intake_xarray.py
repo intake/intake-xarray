@@ -394,7 +394,8 @@ def test_cached_list_netcdf():
         ],
         combine='nested',
         concat_dim='concat_dim',
-        storage_options={'cache_storage': tempd, 'target_protocol': 'file'}
+        storage_options={'cache_storage': tempd, 'target_protocol': 'file'},
+        xarray_kwargs={"engine": "netcdf4"}
     )
     d = source.to_dask()
     assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 1,

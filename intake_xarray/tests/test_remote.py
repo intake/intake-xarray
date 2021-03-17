@@ -133,7 +133,10 @@ def test_http_read_netcdf_dask(data_server):
 
 def test_http_read_netcdf_simplecache(data_server):
     url = f'simplecache::{data_server}/example_1.nc'
-    source = intake.open_netcdf(url, chunks={})
+    source = intake.open_netcdf(
+        url, chunks={},
+        xarray_kwargs={"engine": "netcdf4"}
+    )
     ds = source.to_dask()
     assert isinstance(ds, xr.core.dataset.Dataset)
     assert isinstance(ds.temp.data, dask.array.core.Array)
