@@ -3,6 +3,7 @@ import os
 from dask.delayed import Delayed
 from intake.container.base import RemoteSource, get_partition
 from intake.source.base import Schema
+import xarray
 
 
 class ZarrSerialiser(dict):
