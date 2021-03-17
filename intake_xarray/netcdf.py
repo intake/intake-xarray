@@ -94,14 +94,6 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
     def _add_path_to_ds(self, ds):
         """Adding path info to a coord for a particular file
         """
-        import xarray as xr
-        XARRAY_VERSION = LooseVersion(xr.__version__)
-        if not (XARRAY_VERSION > '0.11.1'):
-            raise ImportError("Your version of xarray is '{}'. "
-                "The insurance that source path is available on output of "
-                "open_dataset was added in 0.11.2, so "
-                "pattern urlpaths are not supported.".format(XARRAY_VERSION))
-
         var = next(var for var in ds)
         new_coords = reverse_format(self.pattern, ds[var].encoding['source'])
         return ds.assign_coords(**new_coords)

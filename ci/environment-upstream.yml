@@ -20,4 +20,4 @@ dependencies:
        - git+https://github.com/intake/intake.git
        - git+https://github.com/pydata/xarray.git
        - rangehttpserver
-       - moto[s3]
+       - moto[s3]==1

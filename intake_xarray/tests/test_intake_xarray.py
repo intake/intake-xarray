@@ -85,26 +85,6 @@ def test_read_glob_pattern_of_netcdf_files():
     assert (d.num.data == np.array([1, 2])).all()
 
 
-@pytest.fixture()
-def old_xarray():
-    import xarray as xr
-    version = xr.__version__
-    try:
-        xr.__version__ = "0.1"
-        yield
-    finally:
-        xr.__version__ = version
-
-
-def test_old_xarray(old_xarray):
-    from intake_xarray.netcdf import NetCDFSource
-    source = NetCDFSource(os.path.join(here, 'data', 'example_{num: d}.nc'),
-                          concat_dim='num', combine='nested')
-    with pytest.raises(ImportError,
-                       match='open_dataset was added in 0.11.2'):
-        source.to_dask()
-
-
 def test_read_partition_zarr(zarr_source):
     source = zarr_source
     with pytest.raises(TypeError):
@@ -394,7 +374,8 @@ def test_cached_list_netcdf():
         ],
         combine='nested',
         concat_dim='concat_dim',
-        storage_options={'cache_storage': tempd, 'target_protocol': 'file'}
+        storage_options={'cache_storage': tempd, 'target_protocol': 'file'},
+        xarray_kwargs={"engine": "netcdf4"}
     )
     d = source.to_dask()
     assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 1,

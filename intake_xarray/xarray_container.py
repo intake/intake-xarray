@@ -1,7 +1,9 @@
 import itertools
 import os
+from dask.delayed import Delayed
 from intake.container.base import RemoteSource, get_partition
 from intake.source.base import Schema
+import xarray
 
 
 class ZarrSerialiser(dict):
@@ -52,12 +54,13 @@ def serialize_zarr_ds(ds):
         attrs = ds.attrs.copy()
         ds.attrs.pop('_ARRAY_DIMENSIONS', None)  # zarr implementation detail
         x = ds.to_zarr(s, compute=False)
-        x.dask = dict(x.dask)
-        for k, v in x.dask.items():
+        dsk = dict(x.dask)
+        for k, v in dsk.items():
             # replace the data writing funcs with no-op, so as not to waste
             # time on serialization, when all we want is metadata
             if isinstance(k, tuple) and k[0].startswith('store-'):
-                x.dask[k] = (noop, ) + x.dask[k][1:]
+                dsk[k] = (noop, ) + dsk[k][1:]
+        x = Delayed(x.key, dsk=dsk)
         dask.compute(x, scheduler='threads')
     finally:
         ds.attrs = attrs
