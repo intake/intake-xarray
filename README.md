@@ -10,7 +10,8 @@ data drivers included in this package.
 
 In `intake-xarray`, there are plugins provided for reading data into [xarray](http://xarray.pydata.org/en/stable/) 
 containers:
-  - NetCDF
+  - NetCDF (also handles other file formats which can be passed to
+  [xarray.open_dataset](http://xarray.pydata.org/en/stable/generated/xarray.open_dataset.html) such as grib)
   - OPeNDAP
   - Rasterio
   - Zarr
