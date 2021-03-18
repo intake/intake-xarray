@@ -10,7 +10,7 @@ from setuptools import setup, find_packages
 import versioneer
 
 INSTALL_REQUIRES = ['intake >=0.5.2', 'xarray >=0.17.0', 'zarr', 'dask >=2.2', 'netcdf4', 'fsspec>0.8.3',
-                    'msgpack-python', 'requests']
+                    'msgpack', 'requests']
 
 setup(
     name='intake-xarray',
@@ -18,8 +18,8 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     description='xarray plugins for Intake',
     url='https://github.com/ContinuumIO/intake-xarray',
-    maintainer='Julia Signell',
-    maintainer_email='jsignell@anaconda.com',
+    maintainer='Martin Durant',
+    maintainer_email='mdurant@anaconda.com',
     license='BSD',
     py_modules=['intake_xarray'],
     packages=find_packages(),
