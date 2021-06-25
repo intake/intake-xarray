@@ -332,7 +332,7 @@ class ImageSource(DataSourceMixin, PatternMixin):
         Main entry function that finds a set of files and passes them to the
         reader.
         """
-        from dask.bytes import open_files
+        from fsspec.core import open_files
 
         files = open_files(self.urlpath, **self.storage_options)
         if len(files) == 0:
