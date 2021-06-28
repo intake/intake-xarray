@@ -1,4 +1,6 @@
 import itertools
+import os
+from dask.delayed import Delayed
 from intake.container.base import RemoteSource, get_partition
 from intake.source.base import Schema
 
@@ -59,7 +61,8 @@ class RemoteXarray(RemoteSource):
         import xarray as xr
         super(RemoteXarray, self).__init__(url, headers, **kwargs)
         self._schema = None
-        self._ds = xr.open_zarr(self.metadata['internal'])
+        self._ds = xr.open_zarr(self.metadata['internal'],
+                                consolidated=False)
 
     def _get_schema(self):
         """Reconstruct xarray arrays

@@ -30,7 +30,7 @@ class ZarrSource(DataSourceMixin):
         self._mapper = get_mapper(self.urlpath, **self.storage_options)
         kw = self.kwargs.copy()
         if "consolidated" not in kw:
-            kw['consolidated'] = True
+            kw['consolidated'] = False
         self._ds = xr.open_zarr(self._mapper, **kw)
 
     def close(self):
