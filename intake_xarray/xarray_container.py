@@ -3,26 +3,6 @@ import os
 from dask.delayed import Delayed
 from intake.container.base import RemoteSource, get_partition
 from intake.source.base import Schema
-import xarray
-
-
-class ZarrSerialiser(dict):
-    """Keeps only the non-data parts of a Zarr dataset for serialization
-
-
-    In this example ``s`` is safe to serialize with msgpack for sending
-    across the wire. The reconstituted dataset will contain numpy and dask
-    arrays that have no data.
-    """
-
-    def __setitem__(self, item, value):
-        if os.path.basename(item) in ['.zgroup', '.zattrs', '.zarray']:
-            dict.__setitem__(self, item, value)
-
-
-def noop(*args):
-    """Filler function to put in the ``store()`` dask graphs"""
-    return 0
 
 
 def serialize_zarr_ds(ds):
@@ -48,20 +28,11 @@ def serialize_zarr_ds(ds):
     -------
     dictionary with .z* keys for the various elements of the original dataset.
     """
-    import dask
-    s = ZarrSerialiser()
+    s = {}
     try:
         attrs = ds.attrs.copy()
         ds.attrs.pop('_ARRAY_DIMENSIONS', None)  # zarr implementation detail
-        x = ds.to_zarr(s, compute=False)
-        dsk = dict(x.dask)
-        for k, v in dsk.items():
-            # replace the data writing funcs with no-op, so as not to waste
-            # time on serialization, when all we want is metadata
-            if isinstance(k, tuple) and k[0].startswith('store-'):
-                dsk[k] = (noop, ) + dsk[k][1:]
-        x = Delayed(x.key, dsk=dsk)
-        dask.compute(x, scheduler='threads')
+        ds.to_zarr(store=s, chunk_store={}, compute=False)
     finally:
         ds.attrs = attrs
     return s
@@ -90,7 +61,8 @@ class RemoteXarray(RemoteSource):
         import xarray as xr
         super(RemoteXarray, self).__init__(url, headers, **kwargs)
         self._schema = None
-        self._ds = xr.open_zarr(self.metadata['internal'])
+        self._ds = xr.open_zarr(self.metadata['internal'],
+                                consolidated=False)
 
     def _get_schema(self):
         """Reconstruct xarray arrays
