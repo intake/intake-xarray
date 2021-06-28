@@ -28,7 +28,10 @@ class ZarrSource(DataSourceMixin):
         from fsspec import get_mapper
 
         self._mapper = get_mapper(self.urlpath, **self.storage_options)
-        self._ds = xr.open_zarr(self._mapper, **self.kwargs)
+        kw = self.kwargs.copy()
+        if "consolidated" not in kw:
+            kw['consolidated'] = True
+        self._ds = xr.open_zarr(self._mapper, **kw)
 
     def close(self):
         super(ZarrSource, self).close()
