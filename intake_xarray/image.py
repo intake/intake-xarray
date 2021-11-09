@@ -369,10 +369,12 @@ class ImageSource(DataSourceMixin, PatternMixin):
         Controls whether exif tags are extracted from the images. If a
         list, the elements are treated as the particular tags to
         extract from each image. For any other truthy value, all tags
-        that could be extracted from a sample image are used.  When
-        tags are extracted, an xarray Dataset is returned, with each
-        exif tag in the corresponding data variable, and the image
-        data in the data variable 'raster'.
+        that were able to be extracted from a sample image are used.
+        When tags are extracted, an xarray Dataset is returned, with
+        each exif tag in a corresponding data variable of the Dataset,
+        (of type `Optional[exifread.classes.IfdTag]`), and the image
+        data in a data variable 'raster'.
+
     """
     name = 'xarray_image'
 
