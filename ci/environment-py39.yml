@@ -5,6 +5,7 @@ dependencies:
   - python=3.9
   - aiohttp
   - boto3
+  - exifread
   - flask
   - h5netcdf
   - intake
