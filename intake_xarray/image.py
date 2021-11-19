@@ -117,19 +117,18 @@ def _dask_exifread(files, exif_tags):
     """Construct a dask Array to read each tag in `exif_tags` (list of
     str) from the EXIF data of the images in `files`
     """
+    from copy import copy
     from numpy import array
     from dask.array import Array
     from dask.base import tokenize
     from exifread import process_file as read_exif
 
     def _read_exif(open_file):
-        # Using the context manager (as below) occasionally results
-        # in 'I/O operation on closed file' and similar errors
-        # with open_file as f:
-        #     return read_exif(f)
-        #
-        f = open_file.open()
-        return read_exif(f)
+        # Take a fresh copy of open_file, to work around occasional
+        # 'I/O operation on closed file' and similar errors when
+        # open_file is also opened elsewhere
+        with copy(open_file) as f:
+            return read_exif(f)
 
     if not isinstance(exif_tags, list):
         sample = _read_exif(files[0])
