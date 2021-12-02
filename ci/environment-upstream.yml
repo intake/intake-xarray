@@ -12,6 +12,7 @@ dependencies:
   - pydap
   - pytest
   - rasterio
+  - tornado
   - scikit-image
   - zarr
   - s3fs
