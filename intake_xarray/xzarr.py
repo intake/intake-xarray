@@ -4,6 +4,13 @@ from .base import DataSourceMixin
 class ZarrSource(DataSourceMixin):
     """Open a xarray dataset.
 
+    If the path is passed as a list or a string containing "*", then multifile open
+    will be called automatically.
+
+    Note that the implicit default value of the ``chunks`` kwarg is ``{}``, i.e., dask
+    will be used to open the dataset with chunksize as inherent in the file. To bypass
+    dask (if you only want to use ``.read()``), use ``chunks=None``.
+
     Parameters
     ----------
     urlpath: str
@@ -12,7 +19,7 @@ class ZarrSource(DataSourceMixin):
     storage_options: dict
         Parameters passed to the backend file-system
     kwargs:
-        Further parameters are passed to xr.open_zarr
+        Further parameters are passed to xarray
     """
     name = 'zarr'
 
@@ -25,13 +32,16 @@ class ZarrSource(DataSourceMixin):
 
     def _open_dataset(self):
         import xarray as xr
-        from fsspec import get_mapper
-
-        self._mapper = get_mapper(self.urlpath, **self.storage_options)
         kw = self.kwargs.copy()
         if "consolidated" not in kw:
             kw['consolidated'] = False
-        self._ds = xr.open_zarr(self._mapper, **kw)
+        if "chunks" not in kw:
+            kw["chunks"] = {}
+        kw["engine"] = "zarr"
+        if isinstance(self.urlpath, list) or "*" in self.urlpath:
+            self._ds = xr.open_mfdataset(self.urlpath, **kw)
+        else:
+            self._ds = xr.open_dataset(self.urlpath, **kw)
 
     def close(self):
         super(ZarrSource, self).close()

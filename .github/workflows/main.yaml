@@ -35,4 +35,4 @@ jobs:
       - name: Run Tests
         shell: bash -l {0}
         run: |
-          pytest --verbose --ignore=intake_xarray/tests/test_network.py
+          pytest --verbose -s --ignore=intake_xarray/tests/test_network.py

@@ -2,7 +2,7 @@ name: test_env
 channels:
   - conda-forge
 dependencies:
-  - python
+  - python==3.9
   - aiohttp
   - boto3
   - flask
@@ -12,12 +12,13 @@ dependencies:
   - pydap
   - pytest
   - rasterio
-  - s3fs
+  - tornado
   - scikit-image
   - zarr
+  - s3fs
+  - moto
   - pip:
-       - git+https://github.com/intake/filesystem_spec.git
+       - git+https://github.com/fsspec/filesystem_spec.git
        - git+https://github.com/intake/intake.git
        - git+https://github.com/pydata/xarray.git
        - rangehttpserver
-       - moto[s3]==1
