@@ -12,5 +12,5 @@ from .xarray_container import RemoteXarray
 from .image import ImageSource
 
 
-intake.register_driver('remote-xarray', RemoteXarray)
+intake.register_driver('remote-xarray', RemoteXarray, clobber=True)
 register_container('xarray', RemoteXarray)
