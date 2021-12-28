@@ -38,6 +38,8 @@ class ZarrSource(DataSourceMixin):
         if "chunks" not in kw:
             kw["chunks"] = {}
         kw["engine"] = "zarr"
+        if self.storage_options and "storage_options" not in kw.get("backend_kwargs", {}):
+            kw.setdefault("backend_kwargs", {})["storage_options"] = self.storage_options
         if isinstance(self.urlpath, list) or "*" in self.urlpath:
             self._ds = xr.open_mfdataset(self.urlpath, **kw)
         else:
