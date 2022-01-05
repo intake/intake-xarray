@@ -32,7 +32,7 @@ def serialize_zarr_ds(ds):
     try:
         attrs = ds.attrs.copy()
         ds.attrs.pop('_ARRAY_DIMENSIONS', None)  # zarr implementation detail
-        ds.to_zarr(store=s, chunk_store={}, compute=False)
+        ds.to_zarr(store=s, chunk_store={}, compute=False, consolidated=False)
     finally:
         ds.attrs = attrs
     return s

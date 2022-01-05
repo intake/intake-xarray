@@ -23,6 +23,7 @@ def data_server():
     pwd = os.getcwd()
     os.chdir(DIRECTORY)
     command = ['python', '-m', 'RangeHTTPServer']
+    success = False
     try:
         P = subprocess.Popen(command)
         timeout = 10
@@ -34,11 +35,14 @@ def data_server():
                 time.sleep(0.1)
                 timeout -= 0.1
                 assert timeout > 0
+        success = False
         yield 'http://localhost:8000'
     finally:
         os.chdir(pwd)
         P.terminate()
-        P.communicate()
+        out = P.communicate()
+        if not success:
+            print(out)
 
 
 def test_http_server_files(data_server):
