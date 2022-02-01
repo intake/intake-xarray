@@ -64,3 +64,20 @@ def test_open_netcdf_s3_simplecache():
     ds = source.to_dask()
     assert isinstance(ds._file_obj, xr.backends.h5netcdf_.H5NetCDFStore)
     assert isinstance(ds, xr.core.dataarray.Dataset)
+
+
+def test_open_opendap():
+    url = 'https://www.ncei.noaa.gov/thredds/dodsC/model-cbofs-files/2021/12/nos.cbofs.fields.n001.20211231.t18z.nc'
+
+    source = intake.open_opendap(url, engine='netcdf4', chunks={'time': 1})
+    ds = source.to_dask()
+    assert isinstance(ds, xr.core.dataarray.Dataset)
+
+
+def test_open_list_opendap():
+    url1 = 'https://www.ncei.noaa.gov/thredds/dodsC/model-cbofs-files/2021/12/nos.cbofs.fields.n001.20211231.t18z.nc'
+    url2 = 'https://www.ncei.noaa.gov/thredds/dodsC/model-cbofs-files/2021/12/nos.cbofs.fields.n002.20211231.t18z.nc'
+
+    source = intake.open_opendap([url1, url2], engine='netcdf4', chunks={'time': 1})
+    ds = source.to_dask()
+    assert isinstance(ds, xr.core.dataarray.Dataset)
