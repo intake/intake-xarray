@@ -27,4 +27,7 @@ python -m pip install \
     git+https://github.com/scikit-image/scikit-image \
     git+https://github.com/zarr-developers/zarr-python \
     git+https://github.com/fsspec/s3fs \
-    git+https://github.com/spulec/moto
+    git+https://github.com/spulec/moto \
+    git+https://github.com/fsspec/filesystem_spec.git \
+    git+https://github.com/pydata/xarray.git \
+    git+https://github.com/danvk/RangeHTTPServer.git
