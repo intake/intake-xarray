@@ -48,12 +48,13 @@ While all the drivers in the ``intake-xarray`` plugin yield ``xarray``
 objects, they do not all accept the same file formats.
 
 
-netcdf/grib
------------
+netcdf/grib/tif
+---------------
 
-Supports any local or downloadable file that can be passed to xarray.open_dataset.
-Remote files will be cached locally.
-This included .nc and .grib but not OPeNDAP URLs as these are not downloadable files.
+Supports any local or downloadable file that can be passed to `xarray.open_mfdataset`. Works for:
+- `netcdf` when installing [`netcdf4`](https://github.com/Unidata/netcdf4-python)
+- `tif` when installing [`rioxarray`](https://github.com/corteva/rioxarray) with `engine="rasterio"`
+- `grib` when installing [`cfgrib`](https://github.com/ecmwf/cfgrib/) with `engine="cfgrib"`
 
 opendap
 -------
@@ -72,10 +73,16 @@ rasterio
 Supports any file format supported by ``rasterio.open`` - most commonly
 geotiffs.
 
+Note: consider installing `rioxarray` and using the `netcdf` driver with `engine="rasterio"`
+
+
 xarray_image
 ------------
 
 Supports any file format that can be passed to ``scikit-image.io.imread``
 which includes all the common image formats (jpg, png, tif, ...)
 
-
+Caching
+~~~~~~~
+Remote files can be cached locally by [`fsspec`](https://filesystem-spec.readthedocs.io/en/latest/features.html#url-chaining).
+Note that `opendap` does not support caching as the URL does not back a downloadable file.
