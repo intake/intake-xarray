@@ -84,5 +84,5 @@ which includes all the common image formats (jpg, png, tif, ...)
 
 Caching
 ~~~~~~~
-Remote files can be cached locally by [`fsspec`](https://filesystem-spec.readthedocs.io/en/latest/features.html#url-chaining).
-Note that `opendap` does not support caching as the URL does not back a downloadable file.
+Remote files can be cached locally by `fsspec<https://filesystem-spec.readthedocs.io/en/latest/features.html#url-chaining>`_.
+Note that ``opendap`` does not support caching as the URL does not back a downloadable file.
