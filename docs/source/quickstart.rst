@@ -52,6 +52,7 @@ netcdf/grib/tif
 ---------------
 
 Supports any local or downloadable file that can be passed to `xarray.open_mfdataset`. Works for:
+
 - ``netcdf`` when installing `netcdf4 <https://github.com/Unidata/netcdf4-python>`_
 - ``tif`` when installing `rioxarray <https://github.com/corteva/rioxarray) with `engine="rasterio">`_
 - ``grib`` when installing `cfgrib <https://github.com/ecmwf/cfgrib/) with `engine="cfgrib">`_
