@@ -52,19 +52,19 @@ netcdf/grib/tif
 ---------------
 
 Supports any local or downloadable file that can be passed to `xarray.open_mfdataset`. Works for:
-- `netcdf` when installing [`netcdf4`](https://github.com/Unidata/netcdf4-python)
-- `tif` when installing [`rioxarray`](https://github.com/corteva/rioxarray) with `engine="rasterio"`
-- `grib` when installing [`cfgrib`](https://github.com/ecmwf/cfgrib/) with `engine="cfgrib"`
+- ``netcdf`` when installing `netcdf4 <https://github.com/Unidata/netcdf4-python>`_
+- ``tif`` when installing `rioxarray <https://github.com/corteva/rioxarray) with `engine="rasterio">`_
+- ``grib`` when installing `cfgrib <https://github.com/ecmwf/cfgrib/) with `engine="cfgrib">`_
 
 opendap
 -------
 
-Supports OPeNDAP URLs, optionally with `esgf`, `urs` or `generic_http` authentication.
+Supports OPeNDAP URLs, optionally with ``esgf``, ``urs`` or ``generic_http`` authentication.
 
 zarr
 -----
 
-Supports .zarr directories. See https://zarr.readthedocs.io/ for more
+Supports ``.zarr`` directories. See https://zarr.readthedocs.io/ for more
 information.
 
 rasterio
@@ -73,7 +73,7 @@ rasterio
 Supports any file format supported by ``rasterio.open`` - most commonly
 geotiffs.
 
-Note: consider installing `rioxarray` and using the `netcdf` driver with `engine="rasterio"`
+Note: Consider installing ``rioxarray`` and using the ``netcdf`` driver with ``engine="rasterio"``.
 
 
 xarray_image
