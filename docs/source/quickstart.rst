@@ -51,7 +51,9 @@ objects, they do not all accept the same file formats.
 netcdf/grib/tif
 ---------------
 
-Supports any local or downloadable file that can be passed to `xarray.open_mfdataset`. Works for:
+Supports any local or downloadable file that can be passed to
+`xarray.open_mfdataset <https://xarray.pydata.org/en/stable/generated/xarray.open_mfdataset.html>`_.
+Works for:
 
 - ``netcdf`` when installing `netcdf4 <https://github.com/Unidata/netcdf4-python>`_
 - ``tif`` when installing `rioxarray <https://github.com/corteva/rioxarray) with `engine="rasterio">`_
@@ -81,7 +83,7 @@ xarray_image
 ------------
 
 Supports any file format that can be passed to ``scikit-image.io.imread``
-which includes all the common image formats (jpg, png, tif, ...)
+which includes all the common image formats (``jpg``, ``png``, ``tif``, ...)
 
 Caching
 ~~~~~~~
