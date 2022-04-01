@@ -137,6 +137,29 @@ def test_read_image():
     assert array.dtype == np.uint8
 
 
+def test_read_image_and_exif():
+    pytest.importorskip('skimage')
+    urlpath = os.path.join(here, 'data', 'images', 'beach57.tif')
+    source = ImageSource(urlpath=urlpath, exif_tags=True)
+    ds = source.read()
+    assert ds['raster'].shape == (256, 252, 3)
+    assert ds['raster'].dtype == np.uint8
+    assert ds['EXIF Image ImageWidth'].item().values == [252]
+    assert ds['EXIF Image ImageLength'].item().values == [256]
+
+
+def test_read_image_and_given_exif_tag():
+    pytest.importorskip('skimage')
+    urlpath = os.path.join(here, 'data', 'images', 'beach57.tif')
+    source = ImageSource(urlpath=urlpath, exif_tags=['Image ImageWidth'])
+    ds = source.read()
+    assert ds['raster'].shape == (256, 252, 3)
+    assert ds['raster'].dtype == np.uint8
+    assert ds['EXIF Image ImageWidth'].item().values == [252]
+    with pytest.raises(KeyError):
+        ds['EXIF Image ImageLength']
+
+
 def test_read_images_as_glob_without_coerce_raises_error():
     pytest.importorskip('skimage')
     urlpath = os.path.join(here, 'data', 'images', '*')
@@ -152,3 +175,12 @@ def test_read_images_as_glob_with_coerce():
     source = ImageSource(urlpath=urlpath, coerce_shape=(256, 256))
     array = source.read()
     assert array.shape == (3, 256, 256, 3)
+
+
+def test_read_images_and_exif_as_glob_with_coerce():
+    pytest.importorskip('skimage')
+    urlpath = os.path.join(here, 'data', 'images', '*')
+    source = ImageSource(urlpath=urlpath, coerce_shape=(256, 256), exif_tags=True)
+    ds = source.read()
+    assert ds['raster'].shape == (3, 256, 256, 3)
+    assert ds['EXIF Image ImageWidth'].shape == (3,)

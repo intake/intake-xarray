@@ -5,6 +5,7 @@ dependencies:
   - python=3.7
   - aiohttp
   - boto3
+  - exifread
   - flask
   - h5netcdf
   - intake
@@ -13,7 +14,7 @@ dependencies:
   - pydap
   - pytest
   - rasterio
-  - s3fs
+  - s3fs >= 2021.08.0
   - scikit-image
   - xarray >= 0.17
   - zarr
