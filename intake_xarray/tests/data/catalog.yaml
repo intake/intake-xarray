@@ -114,3 +114,12 @@ sources:
       chunks: {}
       auth: null
       engine: netcdf4
+  xarray_source_sel:
+    description: select subsample of xarray_source entry
+    driver: intake_xarray.derived.XArrayTransform
+    args:
+      targets:
+        - xarray_source
+      transform: "intake_xarray.tests._sel"
+      transform_kwargs:
+        indexers: "dict([('lat', 20)])"
