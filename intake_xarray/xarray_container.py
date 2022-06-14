@@ -155,6 +155,9 @@ class RemoteXarray(RemoteSource):
         http://xarray.pydata.org/en/stable/generated/xarray.Dataset.to_zarr.html
         """
         from intake_xarray import ZarrSource
-        source.to_dask().to_zarr(path, **kwargs)
+        ds = source.to_dask()
+        if isinstance(ds, xr.DataArray):
+            ds = ds.to_dataset(name=ds.name if ds.name else "variable")
+        ds.to_zarr(path, **kwargs)
         return ZarrSource(path)
 
