@@ -1,5 +1,6 @@
 import itertools
 import os
+import xarray as xr
 from dask.delayed import Delayed
 from intake.container.base import RemoteSource, get_partition
 from intake.source.base import Schema
