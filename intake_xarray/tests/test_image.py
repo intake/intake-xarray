@@ -184,3 +184,14 @@ def test_read_images_and_exif_as_glob_with_coerce():
     ds = source.read()
     assert ds['raster'].shape == (3, 256, 256, 3)
     assert ds['EXIF Image ImageWidth'].shape == (3,)
+
+
+def test_read_images_and_persist():
+    pytest.importorskip('skimage')
+    urlpath = os.path.join(here, 'data', 'images', '*')
+    source = ImageSource(urlpath=urlpath, coerce_shape=(256, 256))
+    import tempfile
+    exported = tempfile.mkdtemp()
+    source.export(exported)
+    import xarray as xr
+    assert xr.open_dataset(exported, engine="zarr")
