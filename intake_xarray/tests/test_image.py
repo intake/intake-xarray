@@ -193,4 +193,5 @@ def test_read_images_and_persist():
     import tempfile
     exported = tempfile.mkdtemp()
     source.export(exported)
+    import xarray as xr
     assert xr.open_dataset(exported, engine="zarr")
