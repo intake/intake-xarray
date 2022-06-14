@@ -190,4 +190,7 @@ def test_read_images_and_persist():
     pytest.importorskip('skimage')
     urlpath = os.path.join(here, 'data', 'images', '*')
     source = ImageSource(urlpath=urlpath, coerce_shape=(256, 256))
-    source.export('./exported')
+    import tempfile
+    exported = tempfile.mkdtemp()
+    source.export(exported)
+    assert xr.open_dataset(exported, engine="zarr")
