@@ -8,18 +8,18 @@ dependencies:
   - exifread
   - flask
   - h5netcdf
+  - moto
   - netcdf4
   - pip
   - pydap
   - pytest
+  - rangehttpserver
   - rasterio
-  - tornado
-  - scikit-image
-  - zarr
   - s3fs
-  - moto
+  - scikit-image
+  - tornado
+  - zarr
   - pip:
        - git+https://github.com/fsspec/filesystem_spec.git
        - git+https://github.com/intake/intake.git
        - git+https://github.com/pydata/xarray.git
-       - rangehttpserver
