@@ -2,7 +2,7 @@ name: test_env
 channels:
   - conda-forge
 dependencies:
-  - python==3.9
+  - python==3.10
   - aiohttp
   - exifread
   - flask
@@ -21,7 +21,7 @@ dependencies:
   - zarr
   - moto < 3
   - intake
-  - xarray
+  - rioxarray
   - gdal
   - pip:
        - git+https://github.com/fsspec/filesystem_spec.git
