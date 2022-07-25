@@ -17,6 +17,8 @@ dependencies:
   - rasterio
   - s3fs
   - scikit-image
+  - entrypoints
+  - pandas
   - tornado
   - zarr
   - pip:

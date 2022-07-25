@@ -17,7 +17,7 @@ dependencies:
   - s3fs >= 2021.08.0
   - scikit-image
   - xarray >= 0.17
+  - rangehttpserver
   - zarr
   - pip:
-       - rangehttpserver
        - moto[s3]==1
