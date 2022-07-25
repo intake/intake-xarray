@@ -4,11 +4,9 @@ channels:
 dependencies:
   - python==3.9
   - aiohttp
-  - boto3
   - exifread
   - flask
   - h5netcdf
-  - moto
   - netcdf4
   - pip
   - pydap
@@ -22,6 +20,9 @@ dependencies:
   - tornado
   - zarr
   - moto < 3
+  - intake
+  - xarray
+  - gdal
   - pip:
        - git+https://github.com/fsspec/filesystem_spec.git
        - git+https://github.com/intake/intake.git
