@@ -19,5 +19,5 @@ dependencies:
   - rangehttpserver
   - xarray >= 0.17
   - zarr
-  - pip:
-       - moto[s3]==1
+  - moto < 3
+  - s3fs

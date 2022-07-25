@@ -21,6 +21,7 @@ dependencies:
   - pandas
   - tornado
   - zarr
+  - moto < 3
   - pip:
        - git+https://github.com/fsspec/filesystem_spec.git
        - git+https://github.com/intake/intake.git
