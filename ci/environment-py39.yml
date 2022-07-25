@@ -16,8 +16,8 @@ dependencies:
   - rasterio
   - s3fs >= 2021.08.0
   - scikit-image
+  - rangehttpserver
   - xarray >= 0.17
   - zarr
-  - pip:
-       - rangehttpserver
-       - moto[s3]==1
+  - moto < 3
+  - s3fs

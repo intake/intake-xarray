@@ -2,9 +2,8 @@ name: test_env
 channels:
   - conda-forge
 dependencies:
-  - python==3.9
+  - python==3.10
   - aiohttp
-  - boto3
   - exifread
   - flask
   - h5netcdf
@@ -12,14 +11,19 @@ dependencies:
   - pip
   - pydap
   - pytest
+  - rangehttpserver
   - rasterio
-  - tornado
-  - scikit-image
-  - zarr
   - s3fs
-  - moto
+  - scikit-image
+  - entrypoints
+  - pandas
+  - tornado
+  - zarr
+  - moto < 3
+  - intake
+  - rioxarray
+  - gdal
   - pip:
        - git+https://github.com/fsspec/filesystem_spec.git
        - git+https://github.com/intake/intake.git
        - git+https://github.com/pydata/xarray.git
-       - rangehttpserver
