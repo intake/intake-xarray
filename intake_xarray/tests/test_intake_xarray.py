@@ -332,6 +332,22 @@ def test_read_opendap_with_auth(auth):
         )
 
 
+def test_read_opendap_mfdataset_with_engine():
+    pytest.importorskip("pydap")
+    from intake_xarray.opendap import OpenDapSource
+    urls = [
+        'http://example.com/opendap/fake1.nc',
+        'http://example.com/opendap/fake2.nc',
+    ]
+    with patch('xarray.open_mfdataset') as open_mfdataset_mock:
+        open_mfdataset_mock.return_value = 'dataset'
+        source = OpenDapSource(urlpath=urls, chunks={}, auth=None, engine='fake-engine')
+        source._open_dataset()
+        retval = source._ds
+        assert open_mfdataset_mock.called_with(urls, chunks={}, engine='fake-engine')
+    assert retval == 'dataset'
+
+
 @pytest.mark.parametrize("auth", ["esgf", "urs"])
 def test_read_opendap_with_auth_netcdf4(auth):
     from intake_xarray.opendap import OpenDapSource
