@@ -23,6 +23,7 @@ dependencies:
   - intake
   - rioxarray
   - gdal
+  - werkzeug < 2.2.20
   - pip:
        - git+https://github.com/fsspec/filesystem_spec.git
        - git+https://github.com/intake/intake.git
