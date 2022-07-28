@@ -149,15 +149,69 @@ def test_http_read_netcdf_simplecache(data_server):
 # S3
 #based on: https://github.com/dask/s3fs/blob/master/s3fs/tests/test_s3fs.py
 test_bucket_name = "test"
+PORT_S3 = 8001
+endpoint_uri = "http://localhost:%s" % PORT_S3
 test_files = ['RGB.byte.tif', 'example_1.nc']
 
-from s3fs.tests.test_s3fs import s3, s3_base, endpoint_uri
+@pytest.fixture()
+def s3_base():
+    # writable local S3 system
+    import shlex
+    import subprocess
+
+    proc = subprocess.Popen(shlex.split("moto_server s3 -p %s" % PORT_S3),
+                            stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+
+    timeout = 5
+    while timeout > 0:
+        try:
+            print("polling for moto server")
+
+            r = requests.get(endpoint_uri)
+            if r.ok:
+                break
+        except:
+            pass
+        timeout -= 0.1
+        time.sleep(0.1)
+    print("server up")
+    yield
+    print("moto done")
+    proc.terminate()
+    proc.wait()
+
+
+@pytest.fixture(scope='function')
+def aws_credentials():
+    """Mocked AWS Credentials for moto."""
+    os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
+    os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
+    os.environ['AWS_SECURITY_TOKEN'] = 'testing'
+    os.environ['AWS_SESSION_TOKEN'] = 'testing'
+
+
+@pytest.fixture()
+def s3(s3_base, aws_credentials):
+    ''' anonymous access local s3 bucket for testing '''
+    from botocore.session import Session
+    session = Session()
+    client = session.create_client("s3", endpoint_url=endpoint_uri)
+    client.create_bucket(Bucket=test_bucket_name, ACL="public-read")
+
+    for file_name in [os.path.join(DIRECTORY,x) for x in test_files]:
+        with open(file_name, 'rb') as f:
+            data = f.read()
+            key = os.path.basename(file_name)
+            client.put_object(Bucket=test_bucket_name, Key=key, Body=data)
+
+    # Make sure cache not being used
+    s3fs.S3FileSystem.clear_instance_cache()
+    s3 = s3fs.S3FileSystem(anon=True, client_kwargs={"endpoint_url": endpoint_uri})
+    s3.invalidate_cache()
+    yield
 
 
 def test_s3_list_files(s3):
-    for x in test_files:
-        file_name = os.path.join(DIRECTORY,x)
-        s3.put(file_name, f"{test_bucket_name}/{x}")
     s3 = s3fs.S3FileSystem(anon=True, client_kwargs={"endpoint_url": endpoint_uri})
     files = s3.ls(test_bucket_name)
     assert len(files) > 0
@@ -167,9 +221,6 @@ def test_s3_list_files(s3):
 def test_s3_read_rasterio(s3):
     # Lots of GDAL Environment variables needed for this to work !
     # https://gdal.org/user/virtual_file_systems.html#vsis3-aws-s3-files
-    for x in test_files:
-        file_name = os.path.join(DIRECTORY,x)
-        s3.put(file_name, f"{test_bucket_name}/{x}")
     os.environ['AWS_NO_SIGN_REQUEST']='YES'
     os.environ['AWS_S3_ENDPOINT'] = endpoint_uri.lstrip('http://')
     os.environ['AWS_VIRTUAL_HOSTING']= 'FALSE'
@@ -187,9 +238,6 @@ def test_s3_read_rasterio(s3):
 
 
 def test_s3_read_netcdf(s3):
-    for x in test_files:
-        file_name = os.path.join(DIRECTORY,x)
-        s3.put(file_name, f"{test_bucket_name}/{x}")
     url = f's3://{test_bucket_name}/example_1.nc'
     s3options = dict(client_kwargs={"endpoint_url": endpoint_uri})
     source = intake.open_netcdf(url,
