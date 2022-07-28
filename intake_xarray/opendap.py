@@ -92,7 +92,7 @@ class OpenDapSource(DataSourceMixin):
         import xarray as xr
 
         if isinstance(self.urlpath, list):
-            self._ds = xr.open_mfdataset(self.urlpath, chunks=self.chunks, **self._kwargs)
+            self._ds = xr.open_mfdataset(self.urlpath, chunks=self.chunks, engine=self.engine, **self._kwargs)
         else:
             store = self._get_store()
             self._ds = xr.open_dataset(store, chunks=self.chunks, **self._kwargs)

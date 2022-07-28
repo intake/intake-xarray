@@ -21,3 +21,4 @@ dependencies:
   - zarr
   - moto < 3
   - s3fs
+  - werkzeug < 2.2.0
