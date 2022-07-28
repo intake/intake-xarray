@@ -159,11 +159,14 @@ def s3_base():
     import shlex
     import subprocess
 
-    proc = subprocess.Popen(shlex.split("moto_server s3 -p %s" % PORT_S3))
+    proc = subprocess.Popen(shlex.split("moto_server s3 -p %s" % PORT_S3),
+                            stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
 
     timeout = 5
     while timeout > 0:
         try:
+            print("polling for moto server")
+
             r = requests.get(endpoint_uri)
             if r.ok:
                 break
@@ -171,7 +174,9 @@ def s3_base():
             pass
         timeout -= 0.1
         time.sleep(0.1)
+    print("server up")
     yield
+    print("moto done")
     proc.terminate()
     proc.wait()
 
