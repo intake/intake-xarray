@@ -17,7 +17,7 @@ setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description='xarray plugins for Intake',
-    url='https://github.com/ContinuumIO/intake-xarray',
+    url='https://github.com/intake/intake-xarray',
     maintainer='Martin Durant',
     maintainer_email='mdurant@anaconda.com',
     license='BSD',
