@@ -18,12 +18,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Setup conda
+        uses: mamba-org/provision-with-micromamba@main
         with:
-          auto-update-conda: true
-          auto-activate-base: false
-          activate-environment: test_env
           environment-file: ci/environment-${{ matrix.CONDA_ENV }}.yml
 
       - name: Development Install Intake-Xarray
