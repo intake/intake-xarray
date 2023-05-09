@@ -4,8 +4,6 @@ from intake.source.base import PatternMixin
 from intake.source.utils import reverse_formats
 from .base import DataSourceMixin, Schema
 
-import glob
-
 
 class RasterIOSource(DataSourceMixin, PatternMixin):
     """Open a xarray dataset via RasterIO.
@@ -59,7 +57,9 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
 
     def _open_files(self, files):
         import xarray as xr
-        das = [xr.open_rasterio(f, chunks=self.chunks, **self._kwargs)
+        import rioxarray as rio
+
+        das = [rio.open_rasterio(f, chunks=self.chunks, **self._kwargs)
                for f in files]
         out = xr.concat(das, dim=self.dim)
 
@@ -78,6 +78,7 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
 
     def _open_dataset(self):
         import xarray as xr
+        import rioxarray as rio
         if self._can_be_local:
             files = fsspec.open_local(self.urlpath, **self.storage_options)
         else:
@@ -87,8 +88,8 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
         if isinstance(files, list):
             self._ds = self._open_files(files)
         else:
-            self._ds = xr.open_rasterio(files, chunks=self.chunks,
-                                        **self._kwargs)
+            self._ds = rio.open_rasterio(files, chunks=self.chunks,
+                                         **self._kwargs)
 
     def _get_schema(self):
         """Make schema object, which embeds xarray object and some details"""
