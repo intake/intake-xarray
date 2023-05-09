@@ -29,7 +29,6 @@ def test_persist(catalog1):
     assert isinstance(s2, ZarrSource)
     assert s2.is_persisted
     assert (source.read() == s2.read()).all()
-    s2.unpersist()
 
 
 def test_import_error(mock_import_xarray, catalog1):
