@@ -21,4 +21,5 @@ dependencies:
   - zarr
   - moto < 3
   - s3fs
+  - rioxarray
   - werkzeug < 2.2.0
