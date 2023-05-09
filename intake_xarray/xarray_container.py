@@ -97,8 +97,11 @@ class RemoteXarray(RemoteSource):
                 # recreate dask arrays
                 name = '-'.join(['remote-xarray', var, self._source_id])
                 arr = self._ds[var].data
-                chunks = arr.chunks
-                nparts = (range(len(n)) for n in chunks)
+                if hasattr(arr, "chunks"):
+                    chunks = arr.chunks
+                    nparts = (range(len(n)) for n in chunks)
+                else:
+                    nparts = ((1,), )
                 if self.metadata.get('array', False):
                     # original was an array, not dataset - no variable name
                     extra = ()
