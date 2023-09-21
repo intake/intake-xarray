@@ -1,6 +1,7 @@
 # Tests for intake-server, local HTTP file server, local "S3" object server
 import aiohttp
 import intake
+import numpy as np
 import os
 import pytest
 import requests
@@ -122,7 +123,7 @@ def test_http_read_netcdf(data_server):
     url = f'{data_server}/example_1.nc'
     source = intake.open_netcdf(url)
     ds = source.read()
-    assert ds['rh'].isel(lat=0,lon=0,time=0).values.dtype == 'float32'
+    assert ds['rh'].isel(lat=0,lon=0,time=0).values.dtype == np.float32
     assert ds['rh'].isel(lat=0,lon=0,time=0).values == 0.5
 
 
@@ -245,7 +246,7 @@ def test_s3_read_netcdf(s3):
     source = intake.open_netcdf(url,
                                 storage_options=s3options)
     ds = source.read()
-    assert ds['rh'].isel(lat=0,lon=0,time=0).values.dtype == 'float32'
+    assert ds['rh'].isel(lat=0,lon=0,time=0).values.dtype == np.float32
     assert ds['rh'].isel(lat=0,lon=0,time=0).values == 0.5
 
 
