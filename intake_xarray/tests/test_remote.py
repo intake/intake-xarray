@@ -69,7 +69,7 @@ def test_http_read_rasterio(data_server):
     assert ("+init" in da.attrs.get('crs', "") or "+proj" in da.attrs.get('crs', "") or
             "PROJCS" in da.spatial_ref.attrs["crs_wkt"])
     assert da.attrs['AREA_OR_POINT'] == 'Area'
-    assert da.dtype == 'uint8'
+    assert da.dtype == np.uint8
     assert da.isel(band=2,x=300,y=500).values == 129
 
 
@@ -236,7 +236,7 @@ def test_s3_read_rasterio(s3):
     assert ("+init" in da.attrs.get('crs', "") or "+proj" in da.attrs.get('crs', "") or
             "PROJCS" in da.spatial_ref.attrs["crs_wkt"])
     assert da.attrs['AREA_OR_POINT'] == 'Area'
-    assert da.dtype == 'uint8'
+    assert da.dtype == np.uint8
     assert da.isel(band=2,x=300,y=500).values == 129
 
 
