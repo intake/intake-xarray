@@ -49,7 +49,7 @@ def data_server():
 def test_http_server_files(data_server):
     test_files = ['RGB.byte.tif', 'example_1.nc', 'example_2.nc', 'little_green.tif', 'little_red.tif']
     h = fsspec.filesystem("http")
-    out = h.glob(data_server + '/')
+    out = h.glob(data_server + '/*')
     assert len(out) > 0
     assert set([data_server+'/'+x for x in test_files]).issubset(set(out))
 
