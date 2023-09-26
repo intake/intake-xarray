@@ -1,6 +1,7 @@
 # Tests for intake-server, local HTTP file server, local "S3" object server
 import aiohttp
 import intake
+import numpy as np
 import os
 import pytest
 import requests
@@ -48,7 +49,7 @@ def data_server():
 def test_http_server_files(data_server):
     test_files = ['RGB.byte.tif', 'example_1.nc', 'example_2.nc', 'little_green.tif', 'little_red.tif']
     h = fsspec.filesystem("http")
-    out = h.glob(data_server + '/')
+    out = h.glob(data_server + '/*')
     assert len(out) > 0
     assert set([data_server+'/'+x for x in test_files]).issubset(set(out))
 
@@ -68,7 +69,7 @@ def test_http_read_rasterio(data_server):
     assert ("+init" in da.attrs.get('crs', "") or "+proj" in da.attrs.get('crs', "") or
             "PROJCS" in da.spatial_ref.attrs["crs_wkt"])
     assert da.attrs['AREA_OR_POINT'] == 'Area'
-    assert da.dtype == 'uint8'
+    assert da.dtype == np.uint8
     assert da.isel(band=2,x=300,y=500).values == 129
 
 
@@ -122,7 +123,7 @@ def test_http_read_netcdf(data_server):
     url = f'{data_server}/example_1.nc'
     source = intake.open_netcdf(url)
     ds = source.read()
-    assert ds['rh'].isel(lat=0,lon=0,time=0).values.dtype == 'float32'
+    assert ds['rh'].isel(lat=0,lon=0,time=0).values.dtype == np.float32
     assert ds['rh'].isel(lat=0,lon=0,time=0).values == 0.5
 
 
@@ -235,7 +236,7 @@ def test_s3_read_rasterio(s3):
     assert ("+init" in da.attrs.get('crs', "") or "+proj" in da.attrs.get('crs', "") or
             "PROJCS" in da.spatial_ref.attrs["crs_wkt"])
     assert da.attrs['AREA_OR_POINT'] == 'Area'
-    assert da.dtype == 'uint8'
+    assert da.dtype == np.uint8
     assert da.isel(band=2,x=300,y=500).values == 129
 
 
@@ -245,7 +246,7 @@ def test_s3_read_netcdf(s3):
     source = intake.open_netcdf(url,
                                 storage_options=s3options)
     ds = source.read()
-    assert ds['rh'].isel(lat=0,lon=0,time=0).values.dtype == 'float32'
+    assert ds['rh'].isel(lat=0,lon=0,time=0).values.dtype == np.float32
     assert ds['rh'].isel(lat=0,lon=0,time=0).values == 0.5
 
 

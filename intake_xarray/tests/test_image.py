@@ -125,7 +125,7 @@ def test_coerce_shape_array_non_int():
     expected = np.append(array[:2, :], [[0], [0]], axis=1)
     actual = _coerce_shape(array, shape)
     assert (expected == actual).all()
-    assert expected.dtype == "float"
+    assert expected.dtype == np.float64
 
 
 def test_read_image():
