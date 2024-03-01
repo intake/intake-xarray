@@ -70,7 +70,7 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
 
         if "*" in url or isinstance(url, list):
             _open_dataset = xr.open_mfdataset
-            if self.pattern:
+            if self.path_as_pattern:
                 kwargs.update(preprocess=self._add_path_to_ds)
             if self.combine is not None:
                 if 'combine' in kwargs:
@@ -95,5 +95,5 @@ class NetCDFSource(DataSourceMixin, PatternMixin):
         """Adding path info to a coord for a particular file
         """
         var = next(var for var in ds)
-        new_coords = reverse_format(self.pattern, ds[var].encoding['source'])
+        new_coords = reverse_format(self.path_as_pattern, ds[var].encoding['source'])
         return ds.assign_coords(**new_coords)
