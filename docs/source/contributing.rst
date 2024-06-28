@@ -106,7 +106,7 @@ Preparing Pull Requests
 
     $ conda env create -f ci/environment-py39.yml
     $ conda activate test_env
-    $ pip install . -e
+    $ pip install -e .
 
 
 #. Run all the tests
