@@ -104,7 +104,7 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
 
             ds2 = xr.Dataset({'raster': self._ds})
             metadata = {
-                'dims': dict(ds2.dims),
+                'dims': dict(ds2.sizes),
                 'data_vars': {k: list(ds2[k].coords)
                               for k in ds2.data_vars.keys()},
                 'coords': tuple(ds2.coords.keys()),
