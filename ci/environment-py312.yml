@@ -2,7 +2,7 @@ name: test_env
 channels:
   - conda-forge
 dependencies:
-  - python=3.9
+  - python=3.12
   - aiohttp
   - boto3
   - exifread
@@ -24,4 +24,3 @@ dependencies:
   - rioxarray
   - werkzeug < 2.2.0
   - dask
-

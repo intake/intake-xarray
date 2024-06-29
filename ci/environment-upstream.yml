@@ -25,6 +25,7 @@ dependencies:
   - gdal
   - werkzeug < 2.2.0
   - rioxarray
+  - dask
   - pip:
        - git+https://github.com/fsspec/filesystem_spec.git
        - git+https://github.com/intake/intake.git
