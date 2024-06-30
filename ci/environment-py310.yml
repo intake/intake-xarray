@@ -23,3 +23,4 @@ dependencies:
   - s3fs
   - rioxarray
   - werkzeug < 2.2.0
+  - dask
