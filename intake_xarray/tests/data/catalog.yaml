@@ -51,19 +51,11 @@ sources:
       urlpath: '{{ CATALOG_DIR }}/*.byte.tif'
       chunks:
         band: 1
-  pattern_tiff_source_concat_on_band:
-    description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
-    driver: rasterio
-    args:
-      urlpath: '{{ CATALOG_DIR }}/little_{color}.tif'
-      chunks:
-        band: 3
-      concat_dim: band
   pattern_tiff_source_concat_on_new_dim:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
     driver: rasterio
     args:
-      urlpath: '{{ CATALOG_DIR }}/little_{color}.tif'
+      urlpath: '{{ CATALOG_DIR }}little_{color}.tif'
       chunks:
         band: 3
       concat_dim: new_dim
@@ -71,19 +63,10 @@ sources:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
     driver: rasterio
     args:
-      urlpath: '{{ CATALOG_DIR }}/little_{band}.tif'
+      urlpath: '{{ CATALOG_DIR }}little_{band}.tif'
       chunks:
         band: 3
       concat_dim: band
-  pattern_tiff_source_path_not_as_pattern:
-    description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
-    driver: rasterio
-    args:
-      urlpath: '{{ CATALOG_DIR }}/color_with_special{}.tif'
-      chunks:
-        band: 3
-      concat_dim: band
-      path_as_pattern: False
   pattern_tiff_source_path_pattern_as_str:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
     driver: rasterio
@@ -114,12 +97,3 @@ sources:
       chunks: {}
       auth: null
       engine: netcdf4
-  xarray_source_sel:
-    description: select subsample of xarray_source entry
-    driver: intake_xarray.derived.XArrayTransform
-    args:
-      targets:
-        - xarray_source
-      transform: "intake_xarray.tests.test_derived._sel"
-      transform_kwargs:
-        indexers: "dict([('lat', 20)])"
