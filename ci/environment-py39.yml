@@ -8,20 +8,21 @@ dependencies:
   - exifread
   - flask
   - h5netcdf
-  - intake
   - netcdf4
   - pip
   - pydap
   - pytest
   - rasterio
-  - s3fs >= 2021.08.0
+  - s3fs
   - scikit-image
   - rangehttpserver
-  - xarray >= 0.17
+  - xarray
   - zarr
-  - moto < 3
+  - moto
   - s3fs
   - rioxarray
-  - werkzeug < 2.2.0
+  - werkzeug
   - dask
-
+  - numpy <2
+  - pip:
+      - git+https://github.com/intake/intake

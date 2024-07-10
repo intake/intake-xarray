@@ -9,7 +9,7 @@
 from setuptools import setup, find_packages
 import versioneer
 
-INSTALL_REQUIRES = ['intake >=0.6.6', 'xarray >=02022', 'zarr', 'dask >=2.2', 'netcdf4', 'fsspec>2022',
+INSTALL_REQUIRES = ['intake >=2', 'xarray >=02022', 'zarr', 'dask >=2.2', 'netcdf4', 'fsspec>2022',
                     'msgpack', 'requests']
 
 setup(
@@ -30,7 +30,6 @@ setup(
             'opendap = intake_xarray.opendap:OpenDapSource',
             'xarray_image = intake_xarray.image:ImageSource',
             'rasterio = intake_xarray.raster:RasterIOSource',
-            'remote-xarray = intake_xarray.xarray_container:RemoteXarray',
         ]
     },
     package_data={'': ['*.csv', '*.yml', '*.html']},
