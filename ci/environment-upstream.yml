@@ -19,11 +19,11 @@ dependencies:
   - pandas
   - tornado
   - zarr
-  - moto < 3
+  - moto
   - intake
   - rioxarray
   - gdal
-  - werkzeug < 2.2.0
+  - werkzeug
   - rioxarray
   - dask
   - pip:
