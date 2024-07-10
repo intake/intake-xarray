@@ -23,6 +23,6 @@ dependencies:
   - rioxarray
   - werkzeug
   - dask
+  - numpy <2
   - pip:
       - git+https://github.com/intake/intake
-
