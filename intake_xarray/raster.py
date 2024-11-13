@@ -1,6 +1,10 @@
 from intake import readers
+from intake.readers.utils import pattern_to_glob
+from intake.source.utils import reverse_formats
 
 from intake_xarray.base import IntakeXarraySourceAdapter
+from oauthlib.common import urlencoded
+from webob.compat import urlparse
 
 
 class RasterIOSource(IntakeXarraySourceAdapter):
@@ -42,8 +46,9 @@ class RasterIOSource(IntakeXarraySourceAdapter):
                  xarray_kwargs=None, metadata=None, path_as_pattern=True,
                  storage_options=None, **kwargs):
         data = readers.datatypes.TIFF(urlpath, storage_options=storage_options)
-        if path_as_pattern and "{" in urlpath:
-            reader = readers.XArrayPatternReader(data, **(xarray_kwargs or {}), metadata=metadata, **kwargs)
+        if (path_as_pattern is True and "{" in urlpath) or isinstance(path_as_pattern, str):
+            reader = readers.XArrayPatternReader(data, **(xarray_kwargs or {}), metadata=metadata, engine="rasterio",
+                                                 pattern=path_as_pattern, **kwargs)
         else:
-            reader = readers.XArrayDatasetReader(data, **(xarray_kwargs or {}), metadata=metadata, **kwargs)
+            reader = readers.XArrayDatasetReader(data, **(xarray_kwargs or {}), metadata=metadata, engine="rasterio", **kwargs)
         self.reader = reader

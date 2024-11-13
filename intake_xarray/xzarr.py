@@ -27,5 +27,5 @@ class ZarrSource(IntakeXarraySourceAdapter):
 
     def __init__(self, urlpath, storage_options=None, metadata=None, **kwargs):
         data = readers.datatypes.Zarr(urlpath, storage_options=storage_options,
-                                     metadata=metadata)
+                                      metadata=metadata)
         self.reader = readers.XArrayDatasetReader(data, **kwargs)

@@ -4,7 +4,10 @@ class IntakeXarraySourceAdapter:
     version = ""
 
     def to_dask(self):
-        return self.reader(chunks={}).read()
+        if "chunks" not in self.reader.kwargs:
+            return self.reader(chunks={}).read()
+        else:
+            return self.reader.read()
 
     def __call__(self, *args, **kwargs):
         return self
@@ -12,7 +15,7 @@ class IntakeXarraySourceAdapter:
     get = __call__
 
     def read(self):
-        return self.reader.read()
+        return self.reader(chunks=None).read()
 
     discover = read
 

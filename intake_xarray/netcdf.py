@@ -48,8 +48,9 @@ class NetCDFSource(IntakeXarraySourceAdapter):
                  path_as_pattern=True, storage_options=None, **kwargs):
         data = readers.datatypes.NetCDF3(urlpath, storage_options=storage_options,
                                       metadata=metadata)
-        if path_as_pattern and "{" in urlpath:
-            reader = readers.XArrayPatternReader(data, **(xarray_kwargs or {}), metadata=metadata, **kwargs)
+        if (path_as_pattern is True and "{" in urlpath) or isinstance(path_as_pattern, str):
+            reader = readers.XArrayPatternReader(data, **(xarray_kwargs or {}), metadata=metadata,
+                                                 pattern=path_as_pattern, **kwargs)
         else:
             reader = readers.XArrayDatasetReader(data, **(xarray_kwargs or {}), metadata=metadata, **kwargs)
         self.reader = reader

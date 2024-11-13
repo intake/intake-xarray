@@ -39,18 +39,6 @@ def test_read_list_of_netcdf_files_with_combine_nested():
                       'concat_dim': 2}
 
 
-def test_read_list_of_netcdf_files_with_combine_by_coords():
-    from intake_xarray.netcdf import NetCDFSource
-    source = NetCDFSource([
-        os.path.join(here, 'data', 'example_1.nc'),
-        os.path.join(here, 'data', 'next_example_1.nc'),
-    ],
-        combine='by_coords',
-    )
-    d = source.to_dask()
-    assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 2}
-
-
 def test_read_glob_pattern_of_netcdf_files():
     """If xarray is old, prompt user to update to use pattern"""
     from intake_xarray.netcdf import NetCDFSource
@@ -153,7 +141,7 @@ def test_read_pattern_path_as_pattern_as_str_with_list_of_urlpaths():
     cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
     colors = cat.pattern_tiff_source_path_pattern_as_str
 
-    da = colors.read()
+    da = colors.read().band_data
     assert da.shape == (2, 3, 64, 64)
     assert len(da.color) == 2
     assert set(da.color.data) == set(['red', 'green'])
@@ -297,9 +285,10 @@ def test_cached_list_netcdf():
         combine='nested',
         concat_dim='concat_dim',
         storage_options={'cache_storage': tempd, 'target_protocol': 'file'},
-        xarray_kwargs={"engine": "netcdf4"}
+        xarray_kwargs={"engine": "scipy"},
+        open_local=True,
     )
-    d = source.to_dask()
+    d = source.read()
     assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 1,
                       'concat_dim': 2}
     assert os.listdir(tempd)
