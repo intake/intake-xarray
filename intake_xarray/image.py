@@ -159,86 +159,6 @@ def _dask_exifread(files, exif_tags):
     return {'EXIF ' + tag: exif_data[:,i] for i, tag in enumerate(exif_tags)}
 
 
-def reader(
-    file, chunks, imread=None, preprocess=None, coerce_shape=None, exif_tags=None
-):
-    """Read a file object and output an dask xarray object
-
-    NOTE: inspired by dask.array.image.imread but altering the input to accept
-    a just one file object.
-
-    Parameters
-    ----------
-    file : OpenFile
-        File object
-    chunks : int or dict
-        Chunks is used to load the new dataset into dask
-        arrays. ``chunks={}`` loads the dataset with dask using a single
-        chunk for all arrays.
-    imread : function (optional)
-        Optionally provide custom imread function.
-        Function should expect a file object and produce a numpy array.
-        Defaults to ``skimage.io.imread``.
-    preprocess : function (optional)
-        Optionally provide custom function to preprocess the image.
-        Function should expect a numpy array for a single image.
-    coerce_shape : tuple len 2 (optional)
-        Optionally coerce the shape of the height and width of the image
-        by setting `coerce_shape` to desired shape.
-    exif_tags : boolean or list of str (optional)
-        Controls whether exif tags are extracted from the images. If a
-        list, the elements are treated as the particular tags to
-        extract from each image. For any other truthy value, all tags
-        that were able to be extracted from a sample image are used.
-        When tags are extracted, an xarray Dataset is returned, with
-        each exif tag in a corresponding data variable of the Dataset,
-        (of type `Optional[exifread.classes.IfdTag]`), and the image
-        data in a data variable 'raster'.
-
-    Returns
-    -------
-    Dask xarray.DataArray or xarray.Dataset of the image, and
-    (optionally) the value of any requested EXIF tags. Treated as one
-    chunk unless chunks kwarg is specified.
-    """
-    import numpy as np
-    from xarray import DataArray, Dataset
-
-    if not imread:
-        from skimage.io import imread
-
-    with file as f:
-        array = imread(f)
-    if coerce_shape is not None:
-        array = _coerce_shape(sample, shape=coerce_shape)
-    if preprocess:
-        array = preprocess(array)
-
-    ny, nx = array.shape[:2]
-    coords = {'y': np.arange(ny),
-              'x': np.arange(nx)}
-    dims = ('y', 'x')
-
-    if len(array.shape) == 3:
-        nchannel = array.shape[2]
-        coords['channel'] = np.arange(nchannel)
-        dims += ('channel',)
-
-    if exif_tags:
-        exif_dict = _dask_exifread([file], exif_tags)
-        exif_dict_ds = {tag: ((), arr[0]) for tag, arr in exif_dict.items()}
-
-        return Dataset(
-            {
-                'raster': (dims, array),
-                **exif_dict_ds,
-            },
-            coords=coords,
-        ).chunk(chunks=chunks)
-    else:
-        return DataArray(array, coords=coords, dims=dims).chunk(chunks=chunks)
-
-
 def multireader(files, chunks, concat_dim, exif_tags, **kwargs):
     """Read a stack of images into a dask xarray object
 
@@ -373,7 +293,7 @@ class ImageReader(readers.BaseReader):
 
 
     def _read(self, urlpath, chunks=None, concat_dim='concat_dim',
-              metadata=None, path_as_pattern=False,
+              metadata=None, path_as_pattern=None,
               storage_options=None, exif_tags=None, **kwargs):
         """
         This function is called when the data source refers to more
@@ -387,15 +307,19 @@ class ImageReader(readers.BaseReader):
         """
         import pandas as pd
         from xarray import DataArray
+        path_as_pattern = path_as_pattern or (path_as_pattern is None and "{" in urlpath)
 
         if path_as_pattern:
-            url = pattern_to_glob(urlpath)
-            __, _, paths = fsspec.get_fs_token_paths(url, **(data.storage_options or {}))
-            field_values = reverse_formats(data.url, paths)
-        else:
-            url = urlpath
+            from intake.readers.utils import pattern_to_glob
 
-        files = fsspec.open_files(urlpath, **(storage_options or {}))
+            url = pattern_to_glob(urlpath)
+            __, _, paths = fsspec.get_fs_token_paths(url, **(storage_options or {}))
+            field_values = reverse_formats(urlpath, paths)
+            paths = paths
+        else:
+            paths = urlpath
+
+        files = fsspec.open_files(paths, **(storage_options or {}))
 
         out = multireader(
             files, chunks, concat_dim, exif_tags, **kwargs
