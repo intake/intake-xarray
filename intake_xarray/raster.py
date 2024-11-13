@@ -3,8 +3,6 @@ from intake.readers.utils import pattern_to_glob
 from intake.source.utils import reverse_formats
 
 from intake_xarray.base import IntakeXarraySourceAdapter
-from oauthlib.common import urlencoded
-from webob.compat import urlparse
 
 
 class RasterIOSource(IntakeXarraySourceAdapter):
