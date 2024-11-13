@@ -1,21 +1,11 @@
 # -*- coding: utf-8 -*-
-from .base import DataSourceMixin
-
 import requests
 import os
 
+from intake import readers
+from intake_xarray.base import IntakeXarraySourceAdapter
 
-def _create_generic_http_auth_session(username, password, check_url=None):
-    if username is None or password is None:
-        raise Exception("To use HTTP auth with the OPeNDAP driver you "
-                        "need to set the DAP_USER and DAP_PASSWORD "
-                        "environment variables")
-    session = requests.Session()
-    session.auth = (username, password)
-    return session
-
-
-class OpenDapSource(DataSourceMixin):
+class OpenDapSource(IntakeXarraySourceAdapter):
     """Open a OPeNDAP source.
 
     Parameters
@@ -41,58 +31,9 @@ class OpenDapSource(DataSourceMixin):
     """
     name = 'opendap'
 
-    def __init__(self, urlpath, chunks=None, auth=None, engine="pydap", xarray_kwargs=None, metadata=None,
+    def __init__(self, urlpath, chunks=None, engine="pydap", xarray_kwargs=None, metadata=None,
                  **kwargs):
-        self.urlpath = urlpath
-        self.chunks = chunks
-        self.auth = auth
-        self.engine = engine
-        self._kwargs = xarray_kwargs or kwargs
-        self._ds = None
-        super(OpenDapSource, self).__init__(metadata=metadata)
-
-    def _get_session(self):
-        if self.auth is None:
-            session = None
-        else:
-            if self.auth == "esgf":
-                from pydap.cas.esgf import setup_session
-            elif self.auth == "urs":
-                from pydap.cas.urs import setup_session
-            elif self.auth == "generic_http":
-                setup_session = _create_generic_http_auth_session
-            else:
-                raise ValueError(
-                    "Authentication method should either be None, 'esgf', 'urs' or "
-                    f"'generic_http', got '{self.auth}' instead."
-                )
-            username = os.getenv('DAP_USER', None)
-            password = os.getenv('DAP_PASSWORD', None)
-            session = setup_session(username, password, check_url=self.urlpath)
-
-        return session
-
-    def _get_store(self):
-        import xarray as xr
-        session = self._get_session()
-        if self.engine == "netcdf4":
-            if session:
-                raise ValueError(
-                    "Opendap session requires 'pydap' engine."
-                )
-            return xr.backends.NetCDF4DataStore.open(self.urlpath)
-        elif self.engine == "pydap":
-            return xr.backends.PydapDataStore.open(self.urlpath, session=session)
-        else:
-            raise ValueError(
-                "xarray engine for opendap driver should either be 'netcdf4' or 'pydap'."
-            )
-
-    def _open_dataset(self):
-        import xarray as xr
-
-        if isinstance(self.urlpath, list):
-            self._ds = xr.open_mfdataset(self.urlpath, chunks=self.chunks, engine=self.engine, **self._kwargs)
-        else:
-            store = self._get_store()
-            self._ds = xr.open_dataset(store, chunks=self.chunks, **self._kwargs)
+        data = readers.datatypes.OpenDAP(urlpath)
+        self.reader = readers.XArrayDatasetReader(
+            data, engine=engine, **(xarray_kwargs or {}), metadata=metadata, **kwargs
+        )

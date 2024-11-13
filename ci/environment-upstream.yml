@@ -19,13 +19,14 @@ dependencies:
   - pandas
   - tornado
   - zarr
-  - moto < 3
+  - moto
   - intake
   - rioxarray
   - gdal
-  - werkzeug < 2.2.0
+  - werkzeug
   - rioxarray
   - dask
+  - numpy <2
   - pip:
        - git+https://github.com/fsspec/filesystem_spec.git
        - git+https://github.com/intake/intake.git

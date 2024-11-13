@@ -1,7 +1,9 @@
+import fsspec
 
-from intake.source.base import PatternMixin
 from intake.source.utils import reverse_formats
-from .base import DataSourceMixin, Schema
+from intake import readers
+
+from intake_xarray.base import IntakeXarraySourceAdapter
 
 
 def _coerce_shape(array, shape):
@@ -157,86 +159,6 @@ def _dask_exifread(files, exif_tags):
     return {'EXIF ' + tag: exif_data[:,i] for i, tag in enumerate(exif_tags)}
 
 
-def reader(
-    file, chunks, imread=None, preprocess=None, coerce_shape=None, exif_tags=None
-):
-    """Read a file object and output an dask xarray object
-
-    NOTE: inspired by dask.array.image.imread but altering the input to accept
-    a just one file object.
-
-    Parameters
-    ----------
-    file : OpenFile
-        File object
-    chunks : int or dict
-        Chunks is used to load the new dataset into dask
-        arrays. ``chunks={}`` loads the dataset with dask using a single
-        chunk for all arrays.
-    imread : function (optional)
-        Optionally provide custom imread function.
-        Function should expect a file object and produce a numpy array.
-        Defaults to ``skimage.io.imread``.
-    preprocess : function (optional)
-        Optionally provide custom function to preprocess the image.
-        Function should expect a numpy array for a single image.
-    coerce_shape : tuple len 2 (optional)
-        Optionally coerce the shape of the height and width of the image
-        by setting `coerce_shape` to desired shape.
-    exif_tags : boolean or list of str (optional)
-        Controls whether exif tags are extracted from the images. If a
-        list, the elements are treated as the particular tags to
-        extract from each image. For any other truthy value, all tags
-        that were able to be extracted from a sample image are used.
-        When tags are extracted, an xarray Dataset is returned, with
-        each exif tag in a corresponding data variable of the Dataset,
-        (of type `Optional[exifread.classes.IfdTag]`), and the image
-        data in a data variable 'raster'.
-
-    Returns
-    -------
-    Dask xarray.DataArray or xarray.Dataset of the image, and
-    (optionally) the value of any requested EXIF tags. Treated as one
-    chunk unless chunks kwarg is specified.
-    """
-    import numpy as np
-    from xarray import DataArray, Dataset
-
-    if not imread:
-        from skimage.io import imread
-
-    with file as f:
-        array = imread(f)
-    if coerce_shape is not None:
-        array = _coerce_shape(sample, shape=coerce_shape)
-    if preprocess:
-        array = preprocess(array)
-
-    ny, nx = array.shape[:2]
-    coords = {'y': np.arange(ny),
-              'x': np.arange(nx)}
-    dims = ('y', 'x')
-
-    if len(array.shape) == 3:
-        nchannel = array.shape[2]
-        coords['channel'] = np.arange(nchannel)
-        dims += ('channel',)
-
-    if exif_tags:
-        exif_dict = _dask_exifread([file], exif_tags)
-        exif_dict_ds = {tag: ((), arr[0]) for tag, arr in exif_dict.items()}
-
-        return Dataset(
-            {
-                'raster': (dims, array),
-                **exif_dict_ds,
-            },
-            coords=coords,
-        ).chunk(chunks=chunks)
-    else:
-        return DataArray(array, coords=coords, dims=dims).chunk(chunks=chunks)
-
-
 def multireader(files, chunks, concat_dim, exif_tags, **kwargs):
     """Read a stack of images into a dask xarray object
 
@@ -320,16 +242,12 @@ def multireader(files, chunks, concat_dim, exif_tags, **kwargs):
         ).chunk(chunks=chunks)
 
 
-class ImageSource(DataSourceMixin, PatternMixin):
+class ImageReader(readers.BaseReader):
     """Open a xarray dataset from image files.
 
     This creates an xarray.DataArray or an xarray.Dataset.
     See http://scikit-image.org/docs/dev/api/skimage.io.html#skimage.io.imread
     for the file formats supported.
-
-    NOTE: Although ``skimage.io.imread`` is used by default, any reader
-    function which accepts a file object and outputs a numpy array can be
-    used instead.
 
     Parameters
     ----------
@@ -353,10 +271,6 @@ class ImageSource(DataSourceMixin, PatternMixin):
     concat_dim : str or iterable
         Dimension over which to concatenate. If iterable, all fields must be
         part of the the pattern.
-    imread : function (optional)
-        Optionally provide custom imread function.
-        Function should expect a file object and produce a numpy array.
-        Defaults to ``skimage.io.imread``.
     preprocess : function (optional)
         Optionally provide custom function to preprocess the image.
         Function should expect a numpy array for a single image and return
@@ -375,22 +289,12 @@ class ImageSource(DataSourceMixin, PatternMixin):
         data in a data variable 'raster'.
 
     """
-    name = 'xarray_image'
+    output_instance = "xarray:Dataset"
 
-    def __init__(self, urlpath, chunks=None, concat_dim='concat_dim',
-                 metadata=None, path_as_pattern=True,
-                 storage_options=None, exif_tags=None, **kwargs):
-        self.path_as_pattern = path_as_pattern
-        self.urlpath = urlpath
-        self.chunks = chunks
-        self.concat_dim = concat_dim
-        self.storage_options = storage_options or {}
-        self.exif_tags = exif_tags
-        self._kwargs = kwargs
-        self._ds = None
-        super(ImageSource, self).__init__(metadata=metadata)
 
-    def _open_files(self, files):
+    def _read(self, urlpath, chunks=None, concat_dim='concat_dim',
+              metadata=None, path_as_pattern=None,
+              storage_options=None, exif_tags=None, **kwargs):
         """
         This function is called when the data source refers to more
         than one file either as a list or a glob. It sets up the
@@ -403,94 +307,57 @@ class ImageSource(DataSourceMixin, PatternMixin):
         """
         import pandas as pd
         from xarray import DataArray
+        path_as_pattern = path_as_pattern or (path_as_pattern is None and "{" in urlpath)
+
+        if path_as_pattern:
+            from intake.readers.utils import pattern_to_glob
+
+            url = pattern_to_glob(urlpath)
+            __, _, paths = fsspec.get_fs_token_paths(url, **(storage_options or {}))
+            field_values = reverse_formats(urlpath, paths)
+            paths = paths
+        else:
+            paths = urlpath
+
+        files = fsspec.open_files(paths, **(storage_options or {}))
 
         out = multireader(
-            files, self.chunks, self.concat_dim, self.exif_tags, **self._kwargs
+            files, chunks, concat_dim, exif_tags, **kwargs
         )
-        if not self.pattern:
+        if isinstance(out, DataArray) and len(files) == 1 and isinstance(urlpath, str) and "*" not in urlpath:
+            out = out[0]
+        if not path_as_pattern:
             return out
 
         coords = {}
         filenames = [f.path for f in files]
-        field_values = reverse_formats(self.pattern, filenames)
 
-        if isinstance(self.concat_dim, list):
-            if not set(field_values.keys()).issuperset(set(self.concat_dim)):
+        if isinstance(concat_dim, list):
+            if not set(field_values.keys()).issuperset(set(concat_dim)):
                 raise KeyError('All concat_dims should be in pattern.')
             index = pd.MultiIndex.from_tuples(
-                zip(*(field_values[dim] for dim in self.concat_dim)),
-                names=self.concat_dim)
+                zip(*(field_values[dim] for dim in concat_dim)),
+                names=concat_dim)
             coords = {
                 k: DataArray(v, dims=('dim_0'))
-                for k, v in field_values.items() if k not in self.concat_dim
+                for k, v in field_values.items() if k not in concat_dim
             }
             out = (out.assign_coords(dim_0=index, **coords)  # use the index
-                      .unstack().chunk(self.chunks))  # unstack along new index
-            return out.transpose(*self.concat_dim,  # reorder dims
-                                 *filter(lambda x: x not in self.concat_dim,
+                      .unstack().chunk(chunks))  # unstack along new index
+            return out.transpose(*concat_dim,  # reorder dims
+                                 *filter(lambda x: x not in concat_dim,
                                          out.dims))
         else:
             coords = {
-                k: DataArray(v, dims=self.concat_dim)
+                k: DataArray(v, dims=concat_dim)
                 for k, v in field_values.items()
             }
-            return out.assign_coords(**coords).chunk(self.chunks).unify_chunks()
+            return out.assign_coords(**coords).chunk(chunks).unify_chunks()
 
-    def _open_dataset(self):
-        """
-        Main entry function that finds a set of files and passes them to the
-        reader.
-        """
-        from fsspec.core import open_files
 
-        files = open_files(self.urlpath, **self.storage_options)
-        if len(files) == 0:
-            raise Exception("No files found at {}".format(self.urlpath))
-        if len(files) == 1:
-            self._ds = reader(
-                files[0], self.chunks, exif_tags=self.exif_tags, **self._kwargs
-            )
-        else:
-            self._ds = self._open_files(files)
+class ImageSource(IntakeXarraySourceAdapter):
+    name = 'xarray_image'
+    container = "xarray"
 
-    def _get_schema(self):
-        """Make schema object, which embeds xarray object and some details"""
-        import xarray as xr
-        import msgpack
-        from .xarray_container import serialize_zarr_ds
-
-        self.urlpath, *_ = self._get_cache(self.urlpath)
-
-        if self._ds is None:
-            self._open_dataset()
-
-            # coerce to dataset for serialization
-            if isinstance(self._ds, xr.Dataset):
-                ds2 = self._ds
-            else:
-                ds2 = xr.Dataset({'raster': self._ds})
-
-            metadata = {
-                'dims': dict(ds2.dims),
-                'data_vars': {k: list(ds2[k].coords)
-                              for k in ds2.data_vars.keys()},
-                'coords': tuple(ds2.coords.keys()),
-                'array': 'raster'
-            }
-            if getattr(self, 'on_server', False):
-                metadata['internal'] = serialize_zarr_ds(ds2)
-            for k, v in ds2.raster.attrs.items():
-                try:
-                    # ensure only sending serializable attrs from remote
-                    msgpack.packb(v)
-                    metadata[k] = v
-                except TypeError:
-                    pass
-            self._schema = Schema(
-                datashape=None,
-                dtype=str(ds2.raster.dtype),
-                shape=ds2.raster.shape,
-                npartitions=ds2.raster.data.npartitions,
-                extra_metadata=metadata)
-
-        return self._schema
+    def __init__(self, *ar, **kw):
+        self.reader = ImageReader(*ar, **kw)

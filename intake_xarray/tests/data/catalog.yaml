@@ -49,48 +49,23 @@ sources:
         type: file
     args:
       urlpath: '{{ CATALOG_DIR }}/*.byte.tif'
-      chunks:
-        band: 1
-  pattern_tiff_source_concat_on_band:
-    description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
-    driver: rasterio
-    args:
-      urlpath: '{{ CATALOG_DIR }}/little_{color}.tif'
-      chunks:
-        band: 3
-      concat_dim: band
   pattern_tiff_source_concat_on_new_dim:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
     driver: rasterio
     args:
-      urlpath: '{{ CATALOG_DIR }}/little_{color}.tif'
-      chunks:
-        band: 3
+      urlpath: '{{ CATALOG_DIR }}little_{color}.tif'
       concat_dim: new_dim
+      open_local: True
   pattern_tiff_source_path_pattern_field_as_band:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
     driver: rasterio
     args:
-      urlpath: '{{ CATALOG_DIR }}/little_{band}.tif'
-      chunks:
-        band: 3
-      concat_dim: band
-  pattern_tiff_source_path_not_as_pattern:
-    description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
-    driver: rasterio
-    args:
-      urlpath: '{{ CATALOG_DIR }}/color_with_special{}.tif'
-      chunks:
-        band: 3
-      concat_dim: band
-      path_as_pattern: False
+      urlpath: '{{ CATALOG_DIR }}little_{color}.tif'
   pattern_tiff_source_path_pattern_as_str:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
     driver: rasterio
     args:
       urlpath: ['{{ CATALOG_DIR }}/little_red.tif', '{{ CATALOG_DIR }}/little_green.tif']
-      chunks:
-        band: 3
       concat_dim: color
       path_as_pattern: '{{ CATALOG_DIR }}/little_{color}.tif'
   blank:
@@ -103,7 +78,6 @@ sources:
     driver: opendap
     args:
       urlpath: http://test.opendap.org/opendap/hyrax/data/nc/data.nc
-      chunks: {}
       auth: null
       engine: pydap
   opendap_source_netcdf4:
@@ -111,15 +85,5 @@ sources:
     driver: opendap
     args:
       urlpath: http://test.opendap.org/opendap/hyrax/data/nc/data.nc
-      chunks: {}
       auth: null
       engine: netcdf4
-  xarray_source_sel:
-    description: select subsample of xarray_source entry
-    driver: intake_xarray.derived.XArrayTransform
-    args:
-      targets:
-        - xarray_source
-      transform: "intake_xarray.tests.test_derived._sel"
-      transform_kwargs:
-        indexers: "dict([('lat', 20)])"

@@ -6,6 +6,7 @@ import shutil
 import tempfile
 import xarray as xr
 
+import intake_xarray.base
 from intake_xarray.netcdf import NetCDFSource
 from intake_xarray.xzarr import ZarrSource
 

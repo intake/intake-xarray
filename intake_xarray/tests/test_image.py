@@ -142,10 +142,10 @@ def test_read_image_and_exif():
     urlpath = os.path.join(here, 'data', 'images', 'beach57.tif')
     source = ImageSource(urlpath=urlpath, exif_tags=True)
     ds = source.read()
-    assert ds['raster'].shape == (256, 252, 3)
+    assert ds['raster'].shape == (1, 256, 252, 3)
     assert ds['raster'].dtype == np.uint8
-    assert ds['EXIF Image ImageWidth'].item().values == [252]
-    assert ds['EXIF Image ImageLength'].item().values == [256]
+    assert ds['EXIF Image ImageWidth'].values[0].values == [252]
+    assert ds['EXIF Image ImageLength'].values[0].values == [256]
 
 
 def test_read_image_and_given_exif_tag():
@@ -153,20 +153,11 @@ def test_read_image_and_given_exif_tag():
     urlpath = os.path.join(here, 'data', 'images', 'beach57.tif')
     source = ImageSource(urlpath=urlpath, exif_tags=['Image ImageWidth'])
     ds = source.read()
-    assert ds['raster'].shape == (256, 252, 3)
+    assert ds['raster'].shape == (1, 256, 252, 3)
     assert ds['raster'].dtype == np.uint8
-    assert ds['EXIF Image ImageWidth'].item().values == [252]
+    assert ds['EXIF Image ImageWidth'].values[0].values == [252]
     with pytest.raises(KeyError):
         ds['EXIF Image ImageLength']
-
-
-def test_read_images_as_glob_without_coerce_raises_error():
-    pytest.importorskip('skimage')
-    urlpath = os.path.join(here, 'data', 'images', '*')
-    source = ImageSource(urlpath=urlpath)
-    with pytest.raises(ValueError,
-                       match='could not broadcast input array'):
-        source.read()
 
 
 def test_read_images_as_glob_with_coerce():
@@ -184,14 +175,3 @@ def test_read_images_and_exif_as_glob_with_coerce():
     ds = source.read()
     assert ds['raster'].shape == (3, 256, 256, 3)
     assert ds['EXIF Image ImageWidth'].shape == (3,)
-
-
-def test_read_images_and_persist():
-    pytest.importorskip('skimage')
-    urlpath = os.path.join(here, 'data', 'images', '*')
-    source = ImageSource(urlpath=urlpath, coerce_shape=(256, 256))
-    import tempfile
-    exported = tempfile.mkdtemp()
-    source.export(exported)
-    import xarray as xr
-    assert xr.open_dataset(exported, engine="zarr")

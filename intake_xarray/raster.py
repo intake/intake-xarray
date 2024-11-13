@@ -1,11 +1,11 @@
-import numpy as np
-import fsspec
-from intake.source.base import PatternMixin
+from intake import readers
+from intake.readers.utils import pattern_to_glob
 from intake.source.utils import reverse_formats
-from .base import DataSourceMixin, Schema
+
+from intake_xarray.base import IntakeXarraySourceAdapter
 
 
-class RasterIOSource(DataSourceMixin, PatternMixin):
+class RasterIOSource(IntakeXarraySourceAdapter):
     """Open a xarray dataset via RasterIO.
 
     This creates an xarray.array, not a dataset (i.e., there is exactly one
@@ -38,97 +38,15 @@ class RasterIOSource(DataSourceMixin, PatternMixin):
         fields. If str, is treated as pattern to match on. Default is True.
     """
     name = 'rasterio'
+    container = "xarray"
 
-    def __init__(self, urlpath, chunks=None, concat_dim='concat_dim',
+    def __init__(self, urlpath,
                  xarray_kwargs=None, metadata=None, path_as_pattern=True,
                  storage_options=None, **kwargs):
-        self.path_as_pattern = path_as_pattern
-        self.urlpath = urlpath
-        self.chunks = chunks
-        self.dim = concat_dim
-        self.storage_options = storage_options or {}
-        self._kwargs = xarray_kwargs or {}
-        self._ds = None
-        if isinstance(self.urlpath, list):
-            self._can_be_local = fsspec.utils.can_be_local(self.urlpath[0])
+        data = readers.datatypes.TIFF(urlpath, storage_options=storage_options)
+        if (path_as_pattern is True and "{" in urlpath) or isinstance(path_as_pattern, str):
+            reader = readers.XArrayPatternReader(data, **(xarray_kwargs or {}), metadata=metadata, engine="rasterio",
+                                                 pattern=path_as_pattern, **kwargs)
         else:
-            self._can_be_local = fsspec.utils.can_be_local(self.urlpath)
-        super(RasterIOSource, self).__init__(metadata=metadata)
-
-    def _open_files(self, files):
-        import xarray as xr
-        import rioxarray as rio
-
-        das = [rio.open_rasterio(f, chunks=self.chunks, **self._kwargs)
-               for f in files]
-        out = xr.concat(das, dim=self.dim)
-
-        coords = {}
-        if self.pattern:
-            coords = {
-                k: xr.concat(
-                    [xr.DataArray(
-                        np.full(das[i].sizes.get(self.dim, 1), v),
-                        dims=self.dim
-                    ) for i, v in enumerate(values)], dim=self.dim)
-                for k, values in reverse_formats(self.pattern, files).items()
-            }
-
-        return out.assign_coords(**coords).chunk(self.chunks)
-
-    def _open_dataset(self):
-        import xarray as xr
-        import rioxarray as rio
-        if self._can_be_local:
-            files = fsspec.open_local(self.urlpath, **self.storage_options)
-        else:
-            # pass URLs to delegate remote opening to rasterio library
-            files = self.urlpath
-            #files = fsspec.open(self.urlpath, **self.storage_options).open()
-        if isinstance(files, list):
-            self._ds = self._open_files(files)
-        else:
-            self._ds = rio.open_rasterio(files, chunks=self.chunks,
-                                         **self._kwargs)
-
-    def _get_schema(self):
-        """Make schema object, which embeds xarray object and some details"""
-        from .xarray_container import serialize_zarr_ds
-        import msgpack
-        import xarray as xr
-
-        self.urlpath, *_ = self._get_cache(self.urlpath)
-
-        if self._ds is None:
-            self._open_dataset()
-
-            ds2 = xr.Dataset({'raster': self._ds})
-            metadata = {
-                'dims': dict(ds2.sizes),
-                'data_vars': {k: list(ds2[k].coords)
-                              for k in ds2.data_vars.keys()},
-                'coords': tuple(ds2.coords.keys()),
-                'array': 'raster'
-            }
-            if getattr(self, 'on_server', False):
-                metadata['internal'] = serialize_zarr_ds(ds2)
-            for k, v in self._ds.attrs.items():
-                try:
-                    msgpack.packb(v)
-                    metadata[k] = v
-                except TypeError:
-                    pass
-
-            if hasattr(self._ds.data, 'npartitions'):
-                npart = self._ds.data.npartitions
-            else:
-                npart = None
-
-            self._schema = Schema(
-                datashape=None,
-                dtype=str(self._ds.dtype),
-                shape=self._ds.shape,
-                npartitions=npart,
-                extra_metadata=metadata)
-
-        return self._schema
+            reader = readers.XArrayDatasetReader(data, **(xarray_kwargs or {}), metadata=metadata, engine="rasterio", **kwargs)
+        self.reader = reader

@@ -5,23 +5,11 @@ import tempfile
 
 import numpy as np
 import pytest
+import xarray as xr
 
 import intake
 
-here = os.path.dirname(__file__)
-
-
-@pytest.mark.parametrize('source', ['netcdf', 'zarr'])
-def test_discover(source, netcdf_source, zarr_source, dataset):
-    source = {'netcdf': netcdf_source, 'zarr': zarr_source}[source]
-    r = source.discover()
-
-    assert r['dtype'] is None
-    assert r['metadata'] is not None
-
-    assert source.metadata['dims'] == dict(dataset.dims)
-    assert set(source.metadata['data_vars']) == set(dataset.data_vars.keys())
-    assert set(source.metadata['coords']) == set(dataset.coords.keys())
+here = os.path.dirname(__file__).rstrip('/')
 
 
 @pytest.mark.parametrize('source', ['netcdf', 'zarr'])
@@ -35,16 +23,6 @@ def test_read(source, netcdf_source, zarr_source, dataset):
     assert ds.dims == dataset.dims
     assert np.all(ds.temp == dataset.temp)
     assert np.all(ds.rh == dataset.rh)
-
-
-def test_read_partition_netcdf(netcdf_source):
-    source = netcdf_source
-    with pytest.raises(TypeError):
-        source.read_partition(None)
-    out = source.read_partition(('temp', 0, 0, 0, 0))
-    d = source.to_dask()['temp'].data
-    expected = d[:1, :4, :5, :10].compute()
-    assert np.all(out == expected)
 
 
 def test_read_list_of_netcdf_files_with_combine_nested():
@@ -61,18 +39,6 @@ def test_read_list_of_netcdf_files_with_combine_nested():
                       'concat_dim': 2}
 
 
-def test_read_list_of_netcdf_files_with_combine_by_coords():
-    from intake_xarray.netcdf import NetCDFSource
-    source = NetCDFSource([
-        os.path.join(here, 'data', 'example_1.nc'),
-        os.path.join(here, 'data', 'next_example_1.nc'),
-    ],
-        combine='by_coords',
-    )
-    d = source.to_dask()
-    assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 2}
-
-
 def test_read_glob_pattern_of_netcdf_files():
     """If xarray is old, prompt user to update to use pattern"""
     from intake_xarray.netcdf import NetCDFSource
@@ -83,15 +49,6 @@ def test_read_glob_pattern_of_netcdf_files():
     assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 1,
                       'num': 2}
     assert (d.num.data == np.array([1, 2])).all()
-
-
-def test_read_partition_zarr(zarr_source):
-    source = zarr_source
-    with pytest.raises(TypeError):
-        source.read_partition(None)
-    out = source.read_partition(('temp', 0, 0, 0, 0))
-    expected = source.to_dask()['temp'].values
-    assert np.all(out == expected)
 
 
 @pytest.mark.parametrize('source', ['netcdf', 'zarr'])
@@ -121,12 +78,10 @@ def test_rasterio():
     pytest.importorskip('rasterio')
     cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
     s = cat.tiff_source
-    info = s.discover()
-    assert info['shape'] == (3, 718, 791)
     x = s.to_dask()
-    assert isinstance(x.data, da.Array)
+    assert isinstance(x.band_data.data, da.Array)
     x = s.read()
-    assert x.data.shape == (3, 718, 791)
+    assert x.band_data.shape == (3, 718, 791)
 
 
 def test_rasterio_glob():
@@ -134,12 +89,10 @@ def test_rasterio_glob():
     pytest.importorskip('rasterio')
     cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
     s = cat.tiff_glob_source
-    info = s.discover()
-    assert info['shape'] == (1, 3, 718, 791)
     x = s.to_dask()
-    assert isinstance(x.data, da.Array)
+    assert isinstance(x.band_data.data, da.Array)
     x = s.read()
-    assert x.data.shape == (1, 3, 718, 791)
+    assert x.band_data.shape == (3, 718, 791)
 
 
 def test_rasterio_empty_glob():
@@ -147,104 +100,48 @@ def test_rasterio_empty_glob():
     cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
     s = cat.empty_glob
     with pytest.raises(Exception):
-        s.discover()
-
-
-def test_rasterio_cached_glob():
-    import dask.array as da
-    pytest.importorskip('rasterio')
-    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
-    s = cat.cached_tiff_glob_source
-    cache = s.cache[0]
-    info = s.discover()
-    assert info['shape'] == (1, 3, 718, 791)
-    x = s.to_dask()
-    assert isinstance(x.data, da.Array)
-    x = s.read()
-    assert x.data.shape == (1, 3, 718, 791)
-    cache.clear_all()
-
-
-def test_read_partition_tiff():
-    pytest.importorskip('rasterio')
-    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
-    s = cat.tiff_source()
-
-    with pytest.raises(TypeError):
-        s.read_partition(None)
-    out = s.read_partition((0, 0, 0))
-    d = s.to_dask().data
-    expected = d[:1].compute()
-    assert np.all(out == expected)
-
-
-def test_read_pattern_concat_on_existing_dim():
-    pytest.importorskip('rasterio')
-    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
-    colors = cat.pattern_tiff_source_concat_on_band()
-
-    da = colors.read()
-    assert da.shape == (6, 64, 64)
-    assert len(da.color) == 6
-    assert set(da.color.data) == set(['red', 'green'])
-
-    assert (da.band == [1, 2, 3, 1, 2, 3]).all()
-    assert da[da.color == 'red'].shape == (3, 64, 64)
-
-    rgb = {'red': [204, 17, 17], 'green': [17, 204, 17]}
-    for color, values in rgb.items():
-        for i, v in enumerate(values):
-            assert (da[da.color == color].sel(band=i+1).values == v).all()
+        s.read()
 
 
 def test_read_pattern_concat_on_new_dim():
     pytest.importorskip('rasterio')
     cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
-    colors = cat.pattern_tiff_source_concat_on_new_dim()
+    colors = cat.pattern_tiff_source_concat_on_new_dim
 
-    da = colors.read()
+    da = colors.read().band_data
     assert da.shape == (2, 3, 64, 64)
-    assert len(da.color) == 2
-    assert set(da.color.data) == set(['red', 'green'])
-    assert da[da.color == 'red'].shape == (1, 3, 64, 64)
+    assert len(da.new_dim) == 2
+    assert set(da.new_dim.data) == set(['red', 'green'])
+    assert da[da.new_dim == 'red'].shape == (1, 3, 64, 64)
 
     rgb = {'red': [204, 17, 17], 'green': [17, 204, 17]}
     for color, values in rgb.items():
         for i, v in enumerate(values):
-            assert (da[da.color == color][0].sel(band=i+1).values == v).all()
+            assert (da[da.new_dim == color][0].sel(band=i+1).values == v).all()
 
 
 def test_read_pattern_field_as_band():
     pytest.importorskip('rasterio')
     cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
-    colors = cat.pattern_tiff_source_path_pattern_field_as_band()
+    colors = cat.pattern_tiff_source_path_pattern_field_as_band
 
-    da = colors.read()
-    assert len(da.band) == 6
-    assert set(da.band.data) == set(['red', 'green'])
-    assert da[da.band == 'red'].shape == (3, 64, 64)
+    da = colors.read().band_data
+    assert da.shape == (2, 3, 64, 64)
+    assert set(da.color.data) == set(['red', 'green'])
+    assert da[da.color == 'red'].squeeze().shape == (3, 64, 64)
 
     rgb = {'red': [204, 17, 17], 'green': [17, 204, 17]}
     for color, values in rgb.items():
         for i, v in enumerate(values):
-            assert (da[da.band == color][i].values == v).all()
-
-
-def test_read_pattern_path_not_as_pattern():
-    pytest.importorskip('rasterio')
-    cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
-    green = cat.pattern_tiff_source_path_not_as_pattern()
-
-    da = green.read()
-    assert len(da.band) == 3
+            assert (da[da.color == color][0][i].values == v).all()
 
 
 def test_read_pattern_path_as_pattern_as_str_with_list_of_urlpaths():
     pytest.importorskip('rasterio')
     cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
-    colors = cat.pattern_tiff_source_path_pattern_as_str()
+    colors = cat.pattern_tiff_source_path_pattern_as_str
 
-    da = colors.read()
+    da = colors.read().band_data
     assert da.shape == (2, 3, 64, 64)
     assert len(da.color) == 2
     assert set(da.color.data) == set(['red', 'green'])
@@ -307,8 +204,6 @@ def test_read_opendap_no_auth(engine):
     pytest.importorskip("pydap")
     cat = intake.open_catalog(os.path.join(here, "data", "catalog.yaml"))
     source = cat["opendap_source_{}".format(engine)]
-    info = source.discover()
-    assert info["metadata"]["dims"] == {"TIME": 12}
     x = source.read()
     assert x.TIME.shape == (12,)
 
@@ -342,8 +237,7 @@ def test_read_opendap_mfdataset_with_engine():
     with patch('xarray.open_mfdataset') as open_mfdataset_mock:
         open_mfdataset_mock.return_value = 'dataset'
         source = OpenDapSource(urlpath=urls, chunks={}, auth=None, engine='fake-engine')
-        source._open_dataset()
-        retval = source._ds
+        retval = source.read()
         assert open_mfdataset_mock.called_with(urls, chunks={}, engine='fake-engine')
     assert retval == 'dataset'
 
@@ -359,8 +253,8 @@ def test_read_opendap_with_auth_netcdf4(auth):
     with patch(
         f"pydap.cas.{auth}.setup_session", return_value=1
     ) as mock_setup_session:
-        source = OpenDapSource(urlpath=urlpath, chunks={}, auth=auth, engine="netcdf4")
-        with pytest.raises(ValueError):
+        source = OpenDapSource(urlpath=urlpath, chunks={}, auth=auth, engine="pydap")
+        with pytest.raises(Exception):
             source.discover()
 
 
@@ -369,7 +263,7 @@ def test_read_opendap_invalid_auth():
     from intake_xarray.opendap import OpenDapSource
 
     source = OpenDapSource(urlpath="https://test.url", chunks={}, auth="abcd", engine="pydap")
-    with pytest.raises(ValueError):
+    with pytest.raises(Exception):
         source.discover()
 
 
@@ -391,9 +285,10 @@ def test_cached_list_netcdf():
         combine='nested',
         concat_dim='concat_dim',
         storage_options={'cache_storage': tempd, 'target_protocol': 'file'},
-        xarray_kwargs={"engine": "netcdf4"}
+        xarray_kwargs={"engine": "scipy"},
+        open_local=True,
     )
-    d = source.to_dask()
+    d = source.read()
     assert d.dims == {'lat': 5, 'lon': 10, 'level': 4, 'time': 1,
                       'concat_dim': 2}
     assert os.listdir(tempd)
