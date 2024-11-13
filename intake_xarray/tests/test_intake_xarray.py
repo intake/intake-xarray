@@ -125,15 +125,15 @@ def test_read_pattern_field_as_band():
     cat = intake.open_catalog(os.path.join(here, 'data', 'catalog.yaml'))
     colors = cat.pattern_tiff_source_path_pattern_field_as_band
 
-    da = colors.read()
-    assert len(da.band) == 6
-    assert set(da.band.data) == set(['red', 'green'])
-    assert da[da.band == 'red'].shape == (3, 64, 64)
+    da = colors.read().band_data
+    assert da.shape == (2, 3, 64, 64)
+    assert set(da.color.data) == set(['red', 'green'])
+    assert da[da.color == 'red'].squeeze().shape == (3, 64, 64)
 
     rgb = {'red': [204, 17, 17], 'green': [17, 204, 17]}
     for color, values in rgb.items():
         for i, v in enumerate(values):
-            assert (da[da.band == color][i].values == v).all()
+            assert (da[da.color == color][0][i].values == v).all()
 
 
 def test_read_pattern_path_as_pattern_as_str_with_list_of_urlpaths():

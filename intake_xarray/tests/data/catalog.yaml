@@ -60,8 +60,7 @@ sources:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
     driver: rasterio
     args:
-      urlpath: '{{ CATALOG_DIR }}little_{band}.tif'
-      concat_dim: band
+      urlpath: '{{ CATALOG_DIR }}little_{color}.tif'
   pattern_tiff_source_path_pattern_as_str:
     description: "https://github.com/mapbox/rasterio/blob/master/tests/data/<red|green>.tif"
     driver: rasterio
